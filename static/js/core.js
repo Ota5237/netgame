@@ -206,3 +206,56 @@ function setDifficulty(k) {
   document.querySelectorAll('.diff').forEach(b => b.classList.toggle('on', b.dataset.diff === k));
   toast(`難易度を「${DIFFS[k].name}」にしました`);
 }
+
+// =========================================================
+// セーブの項目を補う（あとから追加した項目を、古いセーブにも用意する）
+// =========================================================
+function migrate(s) {
+  if (!s) return s;
+  s.hit = s.hit || {};
+  s.miss = s.miss || {};
+  s.difficulty = s.difficulty || 'normal';
+  s.rec.hist = s.rec.hist || [];
+  s.rec.drills = s.rec.drills || 0;
+  s.rec.endlessBest = s.rec.endlessBest || 0;
+  s.rec.endlessWave = s.rec.endlessWave || 0;
+  s.daily = s.daily || {};
+  s.story = s.story || {};
+  return s;
+}
+
+// =========================================================
+// 苦手なキー・成長の記録
+// =========================================================
+const keyLabel = k => (k === ' ' ? 'Space' : k);
+// ミス率の高いキー（ミス3回以上のキーが対象）
+function weakKeys(n = 5) {
+  return Object.keys(S.miss)
+    .filter(k => S.miss[k] >= 3)
+    .map(k => ({ k, rate: S.miss[k] / (S.miss[k] + (S.hit[k] || 0)) }))
+    .filter(w => w.rate >= 0.04)
+    .sort((a, b) => b.rate - a.rate)
+    .slice(0, n);
+}
+// 1回の戦闘の打鍵/分・正確率を記録（短すぎる戦闘は除く）
+function recordHist(kpm, acc) {
+  if (!B || B.keys < 30) return;
+  S.rec.hist.push({ k: kpm, a: acc, t: Date.now() });
+  if (S.rec.hist.length > 40) S.rec.hist = S.rec.hist.slice(-40);
+}
+// 成長グラフ（打鍵/分＝線、正確率＝下の棒）
+function growthChart() {
+  const h = S.rec.hist.slice(-20);
+  if (h.length < 2) return '<p class="dim small">戦闘をすると、ここに 打鍵/分 と 正確率 の推移が 表示されるよ。</p>';
+  const W = 200, H = 64, max = Math.max(60, ...h.map(x => x.k)) * 1.1;
+  const x = i => (i / (h.length - 1)) * (W - 8) + 4;
+  const y = v => H - 14 - (v / max) * (H - 22);
+  const line = h.map((p, i) => `${x(i).toFixed(1)},${y(p.k).toFixed(1)}`).join(' ');
+  const bars = h.map((p, i) => `<rect x="${(x(i) - 2).toFixed(1)}" y="${(H - 2 - (p.a / 100) * 10).toFixed(1)}" width="4" height="${((p.a / 100) * 10).toFixed(1)}" class="gc-acc"/>`).join('');
+  const last = h[h.length - 1], first = h[0];
+  const diff = last.k - first.k;
+  return `<svg viewBox="0 0 ${W} ${H}" class="growth">${bars}<polyline points="${line}" class="gc-line"/>
+      ${h.map((p, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(p.k).toFixed(1)}" r="1.6" class="gc-dot"/>`).join('')}</svg>
+    <p class="small dim">さいきん ${h.length} 回 ： 打鍵/分 <b class="c-cyan">${last.k}</b>（${diff >= 0 ? '<span class="c-lime">+' + diff : '<span class="c-red">' + diff}</span>）・ 正確率 <b class="c-lime">${last.a}%</b></p>`;
+}
+const keycap = k => `<span class="kc">${esc(keyLabel(k))}</span>`;

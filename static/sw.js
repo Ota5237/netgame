@@ -15,6 +15,7 @@ const APP_SHELL = [
   '/static/js/hub.js',
   '/static/js/map.js',
   '/static/js/battle.js',
+  '/static/js/modes.js',
   '/static/js/app.js',
   '/static/manifest.webmanifest',
   '/static/icons/icon-192.png',

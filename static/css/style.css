@@ -468,3 +468,17 @@ body[data-tut~="attack"] .vuln, body[data-tut~="defense"] .packet, body[data-tut
 .mobile-note { margin: 18px auto 0; max-width: 420px; padding: 10px 14px; border: 1px solid var(--gold); border-radius: 4px;
   background: rgba(40, 30, 6, .8); color: #ffe7a8; font-size: 13px; line-height: 1.6; }
 @media (max-width: 600px) { .diff-list { grid-template-columns: 1fr; } }
+
+/* ---------- 苦手キー・成長グラフ ---------- */
+.kc { display: inline-block; min-width: 24px; padding: 2px 7px; margin: 0 2px; text-align: center; font-family: var(--mono); font-weight: 700;
+  color: #fff; background: #1a2a4f; border: 1px solid #3a5288; border-bottom-width: 3px; border-radius: 4px; }
+.rec-grid .rec-wide { grid-column: 1 / -1; }
+.weak-row { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 4px; }
+.weak-row small { font-size: 11px; margin-left: 2px; }
+.growth { width: 100%; height: 70px; display: block; margin-top: 4px; }
+.gc-line { fill: none; stroke: var(--cyan); stroke-width: 1.6; filter: drop-shadow(0 0 3px var(--cyan)); }
+.gc-dot { fill: #fff; }
+.gc-acc { fill: var(--lime); opacity: .55; }
+.th-drill { background: linear-gradient(90deg, rgba(61, 245, 255, .14), transparent); }
+.ktable { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+.ktable td { padding: 4px 8px; border-bottom: 1px solid var(--line); }

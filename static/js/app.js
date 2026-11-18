@@ -40,7 +40,7 @@ function onKeyDown(e) {
 }
 
 async function init() {
-  S = await load();
+  S = migrate(await load());
   updateHud();
   showTitle();
 
@@ -54,6 +54,7 @@ async function init() {
 
   $('#sectorList').addEventListener('click', e => {
     if (e.target.closest('[data-tutorial]')) { startTutorial(); return; }
+    if (e.target.closest('[data-drill]')) { startDrill(); return; }
     const b = e.target.closest('[data-sector]'); if (b && !b.disabled) startRun(+b.dataset.sector);
   });
   $('#guideClose').onclick = hideGuide;

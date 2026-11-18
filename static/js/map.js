@@ -127,6 +127,7 @@ function mapKey(ch) {
     Snd.miss(); bump($('#screen-map .prompt'), 'shake');
     return;
   }
+  S.hit[ch] = (S.hit[ch] || 0) + 1;
   Snd.key();
   if (r.type === 'done') {
     if (r.target.kind === 'exit') { save(true); showHub(); toast('拠点に戻った。進行は保存されています。'); return; }

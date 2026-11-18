@@ -26,7 +26,13 @@ function renderHub() {
       <p class="dim">実際に遊びながら、操作を覚えるチュートリアル。</p></div>
       <button class="btn ${S.tutorialDone ? '' : 'primary'}" data-tutorial>${S.tutorialDone ? 'もう一度' : 'はじめる'}</button>
     </div>`;
-  $('#sectorList').innerHTML = training + D.SECTORS.map(sec => {
+  const wk = weakKeys();
+  const drill = `<div class="sector th-drill">
+      <div class="sec-info"><b>DRILL　苦手キー特訓</b><small>${DRILL_SEC}秒 ・ 負けなし ・ 打った数に応じて CR と EXP</small>
+      <p class="dim">${wk.length ? '苦手なキー：' + wk.map(w => keycap(w.k)).join(' ') : 'まだ記録が少ないので、全体の練習になります。'}</p></div>
+      <button class="btn" data-drill>特訓する</button>
+    </div>`;
+  $('#sectorList').innerHTML = training + drill + D.SECTORS.map(sec => {
     const cleared = S.cleared >= sec.id, locked = sec.id > S.cleared + 1;
     return `<div class="sector th-${sec.theme} ${locked ? 'locked' : ''}">
       <div class="sec-info"><b>${locked ? '🔒 ' : ''}SECTOR ${sec.id}　${sec.name}</b><small>${sec.en}${cleared ? ' ・ <span class="c-lime">CLEAR ✔</span>' : ''}</small>
@@ -45,6 +51,10 @@ function renderHub() {
     ['最高 打鍵/分', r.bestKpm], ['最高 正確率', r.bestAcc + '%'], ['防いだパケット', r.blocked],
     ['撃破数', r.kills], ['総打鍵数', r.totalKeys], ['解読回数', r.pulls],
   ].map(([k, v]) => `<div><small>${k}</small><b>${v}</b></div>`).join('')
+    + `<div class="rec-wide"><small>成長の記録</small>${growthChart()}</div>`
+    + `<div class="rec-wide"><small>苦手なキー（ミス率）</small>${wk.length
+      ? `<div class="weak-row">${wk.map(w => `${keycap(w.k)}<small class="c-red">${Math.round(w.rate * 100)}%</small>`).join('')}</div>`
+      : '<p class="dim small">まだ苦手なキーは 見つかっていないよ。</p>'}</div>`
     + (SERVER_SAVE ? '' : '<p class="save-note dim">💾 セーブは このブラウザに保存されます。ブラウザのデータを消すと 進行も消えるので注意してね。</p>');
 }
 

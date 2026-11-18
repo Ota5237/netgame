@@ -117,7 +117,7 @@ function beginBattle(cfg) {
     mode: cfg.mode, node: cfg.node || { type: 'battle' }, sec: cfg.sec, diffKey, enemies: [], packets: [], shots: [],
     maxHp: t.hp, hp: Math.max(1, Math.round(t.hp * (cfg.hpRatio === undefined ? 1 : cfg.hpRatio))), atk: t.atk, def: t.def,
     shield: 0, slowUntil: 0, stunUntil: 0, crit: 0, time: 0, last: performance.now(), paused: false, ended: false, ending: false,
-    typer: new MultiTyper(), combo: 0, maxCombo: 0, keys: 0, miss: 0, blocked: 0, kills: 0, seq: 0, w: 800, h: 470, coreR: 88, s: 1,
+    typer: new MultiTyper(), combo: 0, maxCombo: 0, keys: 0, miss: 0, blocked: 0, kills: 0, seq: 0, kh: {}, km: {}, w: 800, h: 470, coreR: 88, s: 1,
     skills: S.party.map(id => ({ id, cmd: D.CHARS[id].skill.cmd, cd: D.CHARS[id].skill.cd, readyAt: D.CHARS[id].skill.cd * 0.5 })),
     tut: L ? { lesson: L, blocks: 0, hideVuln: L === 2 || L === 3, skillUsed: false, noFire: L === 1 || L === 3, introDone: false } : null,
     freeze: false, // チュートリアルの説明中、敵と弾の時間を止める
@@ -166,7 +166,7 @@ function makeEnemy(key, mul = {}) {
   const e = D.ENEMIES[key];
   const hp = Math.round(e.hp * B.sec.hpMul * (mul.hp || 1));
   return { key, name: (mul.prefix || '') + e.name, def: e, hp, maxHp: hp, power: e.power * (mul.power || 1), pending: 0, side: 1,
-    interval: e.interval * (mul.interval || 1) * DIFFS[B.diffKey].fire, travel: e.travel, pool: e.pool,
+    interval: e.interval * (mul.interval || 1) * DIFFS[B.diffKey].fire, travel: e.travel, pool: B.drill ? B.drill.pool : e.pool,
     timer: rand(1.2, 2.6), boss: !!e.boss };
 }
 function setEnemies(list) {
@@ -189,6 +189,7 @@ function pickCode(pool) {
   return ok.length ? pick(ok) : null;
 }
 function vulnPool() {
+  if (B.drill) return B.drill.pool;
   const tier = B.sec.tier;
   if (B.diffKey === 'easy') {
     // やさしい：短いコードを中心に
@@ -250,6 +251,7 @@ function update(dt) {
     if (s.onHit) s.onHit();
   });
   if (B.ending) return;
+  if (B.drill && B.time >= B.drill.end) { B.ending = true; endBattle('drill'); return; }
   const now = B.time;
   const tut = B.tut;
   // 防御の練習：最初の1発が途中まで来たら、時間を止めて説明する
@@ -313,6 +315,7 @@ function render() {
     el.classList.toggle('ready', left <= 0);
   });
   const st = [];
+  if (B.drill) st.push(`<span class="st cr">⏱ 残り ${Math.max(0, Math.ceil(B.drill.end - B.time))}秒</span>`);
   if (B.shield) st.push(`<span class="st sh">◈ シールド×${B.shield}</span>`);
   if (slow) st.push(`<span class="st sl">⏬ スロー ${(B.slowUntil - B.time).toFixed(1)}s</span>`);
   if (B.time < B.stunUntil) st.push(`<span class="st sn">⏸ 停止 ${(B.stunUntil - B.time).toFixed(1)}s</span>`);
@@ -353,12 +356,13 @@ function battleKey(ch) {
   const r = B.typer.input(ch);
   if (r.type === 'miss') {
     B.miss++; B.combo = 0;
-    if (exp) S.miss[exp] = (S.miss[exp] || 0) + 1;
+    if (exp) { S.miss[exp] = (S.miss[exp] || 0) + 1; B.km[exp] = (B.km[exp] || 0) + 1; }
     Snd.miss(); bump($('.battle-term .prompt'), 'shake');
     refreshLabels();
     return;
   }
   B.keys++; B.combo++; B.maxCombo = Math.max(B.maxCombo, B.combo);
+  S.hit[ch] = (S.hit[ch] || 0) + 1; B.kh[ch] = (B.kh[ch] || 0) + 1;
   B.skills.forEach(s => { s.readyAt -= SKILL_CHARGE_PER_KEY; }); // 正しく打つほど、スキルが早くたまる
   Snd.key();
   if (r.type === 'done') {
@@ -419,10 +423,8 @@ function killEnemy(e) {
   burst(enemyPt(e), 'pink big');
   [...B.packets].filter(p => p.enemy === e).forEach(p => { burst(packetHead(p), 'pink'); removePacket(p); });
   S.rec.kills++;
-  if (B.enemies.every(x => x.hp <= 0) && !B.ending) {
-    B.ending = true;
-    setTimeout(() => endBattle('win'), 800);
-  }
+  B.kills++;
+  if (B.enemies.every(x => x.hp <= 0) && !B.ending) onAllDefeated();
 }
 function useSkill(s) {
   const c = D.CHARS[s.id], fx = c.skill.fx;
@@ -588,6 +590,7 @@ function togglePause(force) {
 function endBattle(result) {
   B.ended = true;
   if (B.tut && result === 'win') { tutorialWin(); return; }
+  if (B.mode === 'drill') { drillResult(); return; }
   const sec = B.sec, node = B.node, run = S.run;
   const elapsed = Math.max(1, B.time);
   const kpm = Math.round(B.keys / (elapsed / 60));
@@ -595,6 +598,7 @@ function endBattle(result) {
   const r = S.rec;
   r.battles++; r.totalKeys += B.keys; r.blocked += B.blocked;
   if (B.keys >= 30) { r.bestKpm = Math.max(r.bestKpm, kpm); r.bestAcc = Math.max(r.bestAcc, acc); }
+  recordHist(kpm, acc);
 
   let title, sub, rewards = '', ups = [], next;
   if (result === 'win') {
@@ -642,4 +646,15 @@ function endBattle(result) {
     ${upHTML}
     <button class="btn primary" data-act>続ける（Enter）</button>`, { action: next, closable: false, delay: 700 });
   updateHud();
+}
+
+// 敵を全員倒したとき（モードによって、次のウェーブ・敵の再出現・勝利に分かれる）
+function onAllDefeated() {
+  if (B.mode === 'drill') {
+    setTimeout(() => { if (B && !B.ended && B.mode === 'drill') setEnemies([['drone']]); }, 700);
+    return;
+  }
+  if ((B.mode === 'endless' || B.mode === 'daily') && typeof nextWave === 'function') { nextWave(); return; }
+  B.ending = true;
+  setTimeout(() => endBattle('win'), 800);
 }

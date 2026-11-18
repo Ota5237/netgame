@@ -86,7 +86,7 @@ function endStory() {
 function register() {
   const name = $('#nameInput').value.trim();
   if (!name) { bump($('#nameInput'), 'shake'); return; }
-  S = newSave(name.slice(0, 12));
+  S = migrate(newSave(name.slice(0, 12)));
   save(true);
   Snd.boot();
   showHub();

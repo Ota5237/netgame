@@ -117,6 +117,7 @@ window.GameData = (function () {
   // pool: 敵が飛ばす攻撃パケット（打って防ぐ）
   const ENEMIES = {
     // チュートリアル用（トレーニング・サーバー）
+    drone: { name: '特訓ドローン', hp: 150, power: 5, interval: 4.2, travel: 12, hue: 200, pool: ['ping()'] },
     dummy: { name: '練習用ダミー', hp: 70, power: 0, interval: 9999, travel: 12, hue: 190, pool: ['idle()'] },
     turret: { name: '練習用タレット', hp: 80, power: 6, interval: 3.4, travel: 12, hue: 45,
       pool: ['ping()', 'echo.hi', 'test(1)', 'knock()', 'beep()', 'wave()', 'yo.yo', 'zap()'] },
