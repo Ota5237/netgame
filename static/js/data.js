@@ -31,17 +31,17 @@ window.GameData = (function () {
     ['token', 'トークン', 'R', 'healer', 120, 'トークン・パッチ', 'チームHPを22%回復', 16, { heal: 22 }],
     ['query', 'クエリ', 'R', 'scanner', 55, 'クエリ・ファインド', '次の4回の攻撃がクリティカル', 14, { crit: 4 }],
     ['proxy', 'プロキシ', 'R', 'hacker', 290, 'プロキシ・ジャム', '敵の攻撃を3秒停止', 18, { stun: 3 }],
-    ['router', 'ルーター', 'R', 'hacker', 180, 'ルーター・ドロップ', '飛んでいるパケットを全消去', 20, { clear: true }],
+    ['router', 'ルーター', 'R', 'hacker', 180, 'ルーター・ドロップ', '飛んでいるパケットを全消去', 26, { clear: true }],
     // SR
     ['sigma', 'シグマ', 'SR', 'attacker', 350, 'シグマ・サム', '敵1体にATK×3.8のダメージ', 14, { dmg: 3.8 }],
     ['quartz', 'クオーツ', 'SR', 'defender', 185, 'クオーツ・ガード', '攻撃を4回ふせぎ、HP8%回復', 16, { shield: 4, heal: 8 }],
-    ['neon', 'ネオン', 'SR', 'healer', 310, 'ネオン・リブート', 'チームHPを35%回復', 18, { heal: 35 }],
+    ['neon', 'ネオン', 'SR', 'healer', 310, 'ネオン・リブート', 'チームHPを25%回復', 18, { heal: 25 }],
     ['vector', 'ベクター', 'SR', 'scanner', 60, 'ベクター・ロック', '次の6回の攻撃がクリティカル', 15, { crit: 6 }],
-    ['lambda', 'ラムダ', 'SR', 'hacker', 260, 'ラムダ・マップ', 'パケットを6秒スロー＋全消去', 22, { slow: 6, clear: true }],
+    ['lambda', 'ラムダ', 'SR', 'hacker', 260, 'ラムダ・マップ', 'パケットを6秒スロー＋全消去', 28, { slow: 6, clear: true }],
     // SSR
     ['kernel', 'カーネル', 'SSR', 'attacker', 15, 'カーネル・パージ', '敵全体にATK×3.2のダメージ', 16, { dmg: 3.2, all: true }],
-    ['hash', 'ハッシュ', 'SSR', 'hacker', 200, 'ハッシュ・フリーズ', '敵の攻撃を5秒停止＋全消去', 22, { stun: 5, clear: true }],
-    ['aurora', 'オーロラ', 'SSR', 'healer', 165, 'オーロラ・リストア', 'HP50%回復＋シールド2回', 22, { heal: 50, shield: 2 }],
+    ['hash', 'ハッシュ', 'SSR', 'hacker', 200, 'ハッシュ・フリーズ', '敵の攻撃を5秒停止＋全消去', 28, { stun: 5, clear: true }],
+    ['aurora', 'オーロラ', 'SSR', 'healer', 165, 'オーロラ・リストア', 'HP35%回復＋シールド2回', 22, { heal: 35, shield: 2 }],
   ];
 
   const VERB = {
@@ -157,19 +157,19 @@ window.GameData = (function () {
       pool: ['spawn(child)', 'persist()', 'cron.add(evil)', 'respawn --loop', 'listen(:666)', 'nohup evil &', 'daemonize()', 'fork(9)'] },
     mirror: { name: 'ミラー', hp: 250, power: 27, interval: 4.2, travel: 7.5, hue: 220,
       pool: ['reflect(atk)', 'copy.you()', 'echo.back()', 'swap(role)', 'invert(fw)', 'parrot(cmd)', 'clone.key()', 'mirror.mode'] },
-    omega: { name: 'オメガ', hp: 3000, power: 38, interval: 2.5, travel: 7.5, hue: 0, boss: true,
+    omega: { name: 'オメガ', hp: 3000, power: 32, interval: 2.5, travel: 7.5, hue: 0, boss: true,
       pool: ['omega.init()', 'delete(world);', 'rewrite(core)', 'end.of.line', 'absorb(all)', 'final.form()', 'shutdown -h now', 'yield null;', 'crash(grid)', 'take.over()', 'kill(guard)', 'zero.fill()'] },
   };
 
   const SECTORS = [
     { id: 1, name: 'データの森', en: 'DATA FOREST', desc: 'データの木々が生いしげる、ネオグリッドの入口。', theme: 'forest',
-      cmd: id => `cd /forest/${id}`, enemies: ['spam', 'worm', 'bug'], boss: 'trojan', tier: 1, hpMul: 1.8, dmgMul: 1, reward: 1 },
+      cmd: id => `cd /forest/${id}`, enemies: ['spam', 'worm', 'bug'], boss: 'trojan', tier: 1, hpMul: 1.8, dmgMul: 1, reward: 1, fireMul: 1, travelMul: 1 },
     { id: 2, name: 'ファイアウォール山脈', en: 'FIREWALL RIDGE', desc: '燃えるファイアウォールがそびえる山岳地帯。', theme: 'ridge',
-      cmd: id => `ssh fw-${id}`, enemies: ['adware', 'keylog', 'botnet'], boss: 'ransom', tier: 2, hpMul: 1.8, dmgMul: 1, reward: 2 },
+      cmd: id => `ssh fw-${id}`, enemies: ['adware', 'keylog', 'botnet'], boss: 'ransom', tier: 2, hpMul: 1.8, dmgMul: 1.4, reward: 2, fireMul: 0.8, travelMul: 0.9 },
     { id: 3, name: '深層ネット海溝', en: 'DEEP NET TRENCH', desc: '光のとどかない、データの深海。', theme: 'trench',
-      cmd: id => `dive --to ${id}`, enemies: ['rootkit', 'phantom', 'zeroday'], boss: 'chaos', tier: 3, hpMul: 1.8, dmgMul: 1, reward: 3 },
+      cmd: id => `dive --to ${id}`, enemies: ['rootkit', 'phantom', 'zeroday'], boss: 'chaos', tier: 3, hpMul: 1.8, dmgMul: 1.7, reward: 3, fireMul: 0.65, travelMul: 0.82 },
     { id: 4, name: 'コアサーバー', en: 'CORE SERVER', desc: 'ネオグリッドの心臓部。すべての元凶がいる。', theme: 'core',
-      cmd: id => `connect("${id}")`, enemies: ['glitch', 'daemon', 'mirror'], boss: 'omega', tier: 3, hpMul: 2.3, dmgMul: 1.15, reward: 4 },
+      cmd: id => `connect("${id}")`, enemies: ['glitch', 'daemon', 'mirror'], boss: 'omega', tier: 3, hpMul: 2.3, dmgMul: 1.9, reward: 4, fireMul: 0.6, travelMul: 0.75 },
   ];
 
   // チュートリアル専用ステージ（拠点のセクター一覧には出さない）

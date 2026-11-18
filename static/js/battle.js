@@ -95,9 +95,13 @@ function startBattle(node) {
   else if (L === 2) list = [['turret']];
   else if (L === 3) list = [['sparring']];
   else if (L === 4) list = [['spam', { hp: 0.7 }], ['bug', { hp: 0.8 }]];
-  else if (node.type === 'boss') list = [[sec.boss]];
+  else if (node.type === 'boss') list = [[sec.boss, { hp: BOSS_HP }]];
   else if (node.type === 'elite') list = [[pick(sec.enemies), { hp: 2.2, power: 1.3, interval: 0.85, prefix: '強化' }], [pick(sec.enemies)]];
-  else list = S.run.pos[0] >= 3 || Math.random() < 0.35 ? [[pick(sec.enemies)], [pick(sec.enemies)]] : [[pick(sec.enemies)]];
+  else {
+    // 後半の列ほど敵が増える（セクター3・4の後半は3体のことも）
+    const n = S.run.pos[0] >= 4 && sec.id >= 3 && Math.random() < 0.5 ? 3 : S.run.pos[0] >= 3 || Math.random() < 0.35 ? 2 : 1;
+    list = Array.from({ length: n }, () => [pick(sec.enemies)]);
+  }
   beginBattle({
     mode: L ? 'tutorial' : 'run', node, sec, list, lesson: L, hpRatio: S.run.hpRatio,
     title: `${sec.name} ― ${D.NODE_TYPES[node.type].name}`,
@@ -167,7 +171,8 @@ function makeEnemy(key, mul = {}) {
   const e = D.ENEMIES[key];
   const hp = Math.round(e.hp * B.sec.hpMul * (mul.hp || 1));
   return { key, name: (mul.prefix || '') + e.name, def: e, hp, maxHp: hp, power: e.power * (mul.power || 1), pending: 0, side: 1,
-    interval: e.interval * (mul.interval || 1) * DIFFS[B.diffKey].fire, travel: e.travel, pool: B.drill ? B.drill.pool : e.pool,
+    // 後半のセクターほど、敵は速く撃ち（fireMul）、弾も速く届く（travelMul）
+    interval: e.interval * (mul.interval || 1) * DIFFS[B.diffKey].fire * (B.sec.fireMul || 1), travel: e.travel * (B.sec.travelMul || 1), pool: B.drill ? B.drill.pool : e.pool,
     timer: rand(1.2, 2.6), boss: !!e.boss };
 }
 function setEnemies(list) {
@@ -238,7 +243,7 @@ function removePacket(p) {
 }
 
 function loop(now) {
-  const dt = Math.min(0.05, Math.max(0, (now - B.last) / 1000));
+  const dt = Math.min(0.05, Math.max(0, (now - B.last) / 1000)) * DEBUG_SPEED;
   B.last = now;
   if (!B.paused) { B.time += dt; update(dt); }
   if (!B.ended) render();
@@ -384,7 +389,7 @@ function blockPacket(p, quiet) {
   removePacket(p);
   B.blocked++;
   if (B.score !== undefined) B.score += 20;
-  B.skills.forEach(s => { s.readyAt -= 0.5; }); // 防御するとスキルの待ち時間が少し縮む
+  B.skills.forEach(s => { s.readyAt -= 0.25; }); // 防御するとスキルの待ち時間が少し縮む
   if (B.tut && B.tut.lesson === 2) tutBlocked();
   if (quiet) { burst(pt, 'cyan'); return; }
   const m = nearestMember(pt);

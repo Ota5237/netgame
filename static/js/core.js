@@ -7,8 +7,9 @@ const SAVE_KEY = 'netguard_save_v2';
 const SAVE_VERSION = 2;
 const MAX_LV = 30, MAX_STARS = 5, PARTY_MAX = 5;
 const TRAVEL_MUL = 0.85; // パケットが届くまでの時間の倍率（小さいほど難しい）
-const SKILL_CHARGE_PER_KEY = 0.12; // 正しく1文字打つごとに、スキルの待ち時間が縮む秒数
-const SHIELD_MAX = 6; // シールドを重ねられる上限（スキルを連発しても無敵にならないように）
+const SKILL_CHARGE_PER_KEY = 0.08; // 正しく1文字打つごとに、スキルの待ち時間が縮む秒数
+const BOSS_HP = 0.5; // ボスの体力の倍率（長引きすぎないように）
+const SHIELD_MAX = 3; // シールドを重ねられる上限（スキルを連発しても無敵にならないように）
 // 難易度（ミッションと特訓に効く）。travel=弾が届くまでの時間、fire=敵が撃つ間隔、reward=報酬
 const DIFFS = {
   easy: { name: 'やさしい', desc: '弾が遅く、短いコードが中心。報酬 ×0.8', travel: 1.35, fire: 1.2, reward: 0.8 },
@@ -43,6 +44,8 @@ function loadLocal() {
 }
 // Web 公開版（SERVER_SAVE=false）では、セーブはこのブラウザの中だけ
 const SERVER_SAVE = window.SERVER_SAVE !== false;
+// テスト用：URL に ?speed=3 などを付けると戦闘の時間を速める（サーバー保存のローカル版だけ。Web 公開版では無効）
+const DEBUG_SPEED = SERVER_SAVE ? Math.min(10, Math.max(1, Number(new URLSearchParams(location.search).get('speed')) || 1)) : 1;
 async function load() {
   const local = loadLocal();
   if (!SERVER_SAVE) return local;

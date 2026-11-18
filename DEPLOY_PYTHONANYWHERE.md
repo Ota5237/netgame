@@ -92,6 +92,11 @@ cd ~/netguardians && git pull
 
 ※ `static/sw.js` の `VERSION` を上げておくと、プレイヤー側の古いキャッシュが確実に入れ替わります。
 
+## ランキングのデータ
+
+エンドレス・デイリーのランキングは、サーバーの `~/netguardians/data/ranking.db`（SQLite）に自動で作られます。
+`data/` は Git の管理対象外なので、`git pull` しても消えません。ランキングをリセットしたいときは、このファイルを削除して Reload してください。
+
 ## 無料アカウントの注意
 
 - **3か月ごと** に Web タブの「Run until 3 months from today」ボタンを押さないと、公開が止まります（登録メールにお知らせが届きます）
