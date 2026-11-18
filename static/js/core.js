@@ -8,6 +8,7 @@ const SAVE_VERSION = 2;
 const MAX_LV = 30, MAX_STARS = 5, PARTY_MAX = 5;
 const TRAVEL_MUL = 0.85; // パケットが届くまでの時間の倍率（小さいほど難しい）
 const SKILL_CHARGE_PER_KEY = 0.12; // 正しく1文字打つごとに、スキルの待ち時間が縮む秒数
+const SHIELD_MAX = 6; // シールドを重ねられる上限（スキルを連発しても無敵にならないように）
 // 難易度（ミッションと特訓に効く）。travel=弾が届くまでの時間、fire=敵が撃つ間隔、reward=報酬
 const DIFFS = {
   easy: { name: 'やさしい', desc: '弾が遅く、短いコードが中心。報酬 ×0.8', travel: 1.35, fire: 1.2, reward: 0.8 },

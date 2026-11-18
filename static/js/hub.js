@@ -32,7 +32,20 @@ function renderHub() {
       <p class="dim">${wk.length ? '苦手なキー：' + wk.map(w => keycap(w.k)).join(' ') : 'まだ記録が少ないので、全体の練習になります。'}</p></div>
       <button class="btn" data-drill>特訓する</button>
     </div>`;
-  $('#sectorList').innerHTML = training + drill + D.SECTORS.map(sec => {
+  const open = S.cleared >= ENDLESS_UNLOCK;
+  const plan = dailyPlan(), today = S.daily[plan.key] || {};
+  const lockNote = '<p class="dim">🔒 SECTOR 1 をクリアで解放</p>';
+  const endless = `<div class="sector th-endless ${open ? '' : 'locked'}">
+      <div class="sec-info"><b>${open ? '' : '🔒 '}ENDLESS　無限防衛</b><small>どこまで耐えられる？ ・ ランキングあり ・ 難易度「ふつう」固定</small>
+      ${open ? `<p class="dim">自己ベスト：<b class="c-gold">${(S.rec.endlessBest || 0).toLocaleString()}</b> 点（WAVE ${S.rec.endlessWave || 0}）</p>` : lockNote}</div>
+      <div class="sec-btns"><button class="btn small ghost" data-ranking="endless">🏆</button><button class="btn ${open ? 'primary' : ''}" data-endless ${open ? '' : 'disabled'}>挑戦</button></div>
+    </div>`;
+  const daily = `<div class="sector th-daily ${open ? '' : 'locked'}">
+      <div class="sec-info"><b>${open ? '' : '🔒 '}DAILY　デイリーチャレンジ</b><small>今日のルール：${plan.rule.name}（${plan.rule.desc}）・ 3ウェーブ</small>
+      ${open ? `<p class="dim">${today.cleared ? '<span class="c-lime">今日はクリア済み ✔</span>' : '初クリアで <b class="c-gold">+200 CR</b>'}${today.best ? ` ・ 今日のベスト <b class="c-gold">${today.best.toLocaleString()}</b> 点` : ''}</p>` : lockNote}</div>
+      <div class="sec-btns"><button class="btn small ghost" data-ranking="daily-${plan.key}">🏆</button><button class="btn ${open ? 'primary' : ''}" data-daily ${open ? '' : 'disabled'}>挑戦</button></div>
+    </div>`;
+  $('#sectorList').innerHTML = training + drill + endless + daily + D.SECTORS.map(sec => {
     const cleared = S.cleared >= sec.id, locked = sec.id > S.cleared + 1;
     return `<div class="sector th-${sec.theme} ${locked ? 'locked' : ''}">
       <div class="sec-info"><b>${locked ? '🔒 ' : ''}SECTOR ${sec.id}　${sec.name}</b><small>${sec.en}${cleared ? ' ・ <span class="c-lime">CLEAR ✔</span>' : ''}</small>

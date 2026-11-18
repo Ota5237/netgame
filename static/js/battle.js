@@ -190,6 +190,7 @@ function pickCode(pool) {
 }
 function vulnPool() {
   if (B.drill) return B.drill.pool;
+  if (B.mod && B.mod.symbols && Math.random() < 0.6) return D.VULN.hard;
   const tier = B.sec.tier;
   if (B.diffKey === 'easy') {
     // やさしい：短いコードを中心に
@@ -213,7 +214,7 @@ function spawnPacket(e) {
   e.side = -e.side;
   const p = {
     id: 'p' + (++B.seq), text, t: 0, power: e.power, enemy: e,
-    T: e.travel * TRAVEL_MUL * DIFFS[B.diffKey].travel * (1 + Math.max(0, text.length - 10) * 0.05),
+    T: e.travel * TRAVEL_MUL * DIFFS[B.diffKey].travel * ((B.mod && B.mod.travel) || 1) * (1 + Math.max(0, text.length - 10) * 0.05),
     from: e.pos, side: e.side,
     bend: rand(0.25, 0.5),
   };
@@ -381,6 +382,7 @@ function blockPacket(p, quiet) {
   const pt = packetHead(p);
   removePacket(p);
   B.blocked++;
+  if (B.score !== undefined) B.score += 20;
   B.skills.forEach(s => { s.readyAt -= 0.5; }); // 防御するとスキルの待ち時間が少し縮む
   if (B.tut && B.tut.lesson === 2) tutBlocked();
   if (quiet) { burst(pt, 'cyan'); return; }
@@ -424,11 +426,12 @@ function killEnemy(e) {
   [...B.packets].filter(p => p.enemy === e).forEach(p => { burst(packetHead(p), 'pink'); removePacket(p); });
   S.rec.kills++;
   B.kills++;
+  if (B.score !== undefined) B.score += 100 + 20 * (B.wave || 1);
   if (B.enemies.every(x => x.hp <= 0) && !B.ending) onAllDefeated();
 }
 function useSkill(s) {
   const c = D.CHARS[s.id], fx = c.skill.fx;
-  s.readyAt = B.time + c.skill.cd;
+  s.readyAt = B.time + s.cd;
   B.typer.remove('s:' + s.id);
   Snd.skill();
   bump(document.getElementById('sk-' + s.id), 'fired');
@@ -438,7 +441,7 @@ function useSkill(s) {
   act(caster, 'cast');
   say(caster, c.skill.name + '！', 'skill');
   if (fx.heal) { B.hp = Math.min(B.maxHp, B.hp + B.maxHp * fx.heal / 100); floatAt(corePt(), '+' + Math.round(B.maxHp * fx.heal / 100), 'heal'); }
-  if (fx.shield) { B.shield += fx.shield; bump($('#shieldRing'), 'pulse'); }
+  if (fx.shield) { B.shield = Math.min(SHIELD_MAX, B.shield + fx.shield); bump($("#shieldRing"), "pulse"); }
   if (fx.slow) B.slowUntil = Math.max(B.slowUntil, B.time + fx.slow);
   if (fx.stun) B.stunUntil = Math.max(B.stunUntil, B.time + fx.stun);
   if (fx.crit) B.crit += fx.crit;
@@ -591,6 +594,7 @@ function endBattle(result) {
   B.ended = true;
   if (B.tut && result === 'win') { tutorialWin(); return; }
   if (B.mode === 'drill') { drillResult(); return; }
+  if (B.mode === 'endless' || B.mode === 'daily') { waveResult(result); return; }
   const sec = B.sec, node = B.node, run = S.run;
   const elapsed = Math.max(1, B.time);
   const kpm = Math.round(B.keys / (elapsed / 60));

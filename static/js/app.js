@@ -55,6 +55,12 @@ async function init() {
   $('#sectorList').addEventListener('click', e => {
     if (e.target.closest('[data-tutorial]')) { startTutorial(); return; }
     if (e.target.closest('[data-drill]')) { startDrill(); return; }
+    const rk = e.target.closest('[data-ranking]');
+    if (rk) { openRanking(rk.dataset.ranking); return; }
+    const en = e.target.closest('[data-endless]');
+    if (en && !en.disabled) { startEndless(); return; }
+    const dl = e.target.closest('[data-daily]');
+    if (dl && !dl.disabled) { startDaily(); return; }
     const b = e.target.closest('[data-sector]'); if (b && !b.disabled) startRun(+b.dataset.sector);
   });
   $('#guideClose').onclick = hideGuide;
@@ -82,6 +88,7 @@ async function init() {
     B.ending = true; endBattle('retreat');
   };
   $('#modal').addEventListener('click', e => {
+    if (e.target.closest('[data-submit]')) { submitScore(); return; }
     const df = e.target.closest('[data-diff]');
     if (df) { setDifficulty(df.dataset.diff); return; }
     const act = e.target.closest('[data-act]');

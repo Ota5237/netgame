@@ -482,3 +482,13 @@ body[data-tut~="attack"] .vuln, body[data-tut~="defense"] .packet, body[data-tut
 .th-drill { background: linear-gradient(90deg, rgba(61, 245, 255, .14), transparent); }
 .ktable { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
 .ktable td { padding: 4px 8px; border-bottom: 1px solid var(--line); }
+
+/* ---------- エンドレス・デイリー・ランキング ---------- */
+.th-endless { background: linear-gradient(90deg, rgba(255, 61, 154, .16), transparent); }
+.th-daily { background: linear-gradient(90deg, rgba(157, 255, 77, .14), transparent); }
+.sec-btns { display: flex; gap: 6px; align-items: center; }
+.float.wave { color: var(--cyan); font-size: 46px; letter-spacing: .15em; animation-duration: 1.6s; }
+.rank-box { margin-top: 12px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 4px; }
+.rank-box .row-btns { margin-top: 6px; }
+.rank-table td { font-size: 14px; }
+.rank-table tr.me td { background: rgba(157, 255, 77, .12); }
