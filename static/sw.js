@@ -1,6 +1,6 @@
 // Service Worker：オフラインでも起動できるようにする
 // アプリのファイルを変えたら VERSION を上げると、古いキャッシュが消える
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = 'netguard-' + VERSION;
 const FONT_CACHE = 'netguard-fonts';
 const APP_SHELL = [
@@ -9,7 +9,13 @@ const APP_SHELL = [
   '/static/js/data.js',
   '/static/js/art.js',
   '/static/js/typing.js',
-  '/static/js/main.js',
+  '/static/js/core.js',
+  '/static/js/story.js',
+  '/static/js/tutorial.js',
+  '/static/js/hub.js',
+  '/static/js/map.js',
+  '/static/js/battle.js',
+  '/static/js/app.js',
   '/static/manifest.webmanifest',
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',
