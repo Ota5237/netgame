@@ -145,7 +145,8 @@ function moveTo(c, k) {
   if (['battle', 'elite', 'boss', 'lesson', 'exam'].includes(node.type)) {
     run.inBattle = true; // 戦闘中にアプリを閉じても、再開時にこの戦闘からやり直す
     save(true);
-    startBattle(node);
+    if (node.type === 'boss') bossIntro(node, () => startBattle(node));
+    else startBattle(node);
     return;
   }
   if (node.type === 'cache') {

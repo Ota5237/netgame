@@ -37,6 +37,10 @@ function sceneHTML(scene) {
 white_hacker
 &gt; sudo protect --grid neogrid<span class="cursor">_</span></pre></div>`;
     case 'term2': return `<div class="mini-term"><pre>&gt; register --callsign<span class="cursor">_</span></pre></div>`;
+    case 'restore': return towers() + `<div class="mini-term"><pre>&gt; status --grid
+<span class="c-lime">ALL SYSTEMS ONLINE</span>
+threats: 0<span class="cursor">_</span></pre></div>`;
+    case 'thanks': return '<div class="thanks"><h1 class="logo glitch" data-text="THANK YOU">THANK YOU</h1><p>FOR PLAYING ― NET GUARDIANS</p></div>';
     case 'team': {
       const ids = ['kernel', 'neon', 'quartz', 'hash', 'vector'];
       return `<div class="team-line">${ids.map((id, i) =>
@@ -45,12 +49,13 @@ white_hacker
   }
   return '';
 }
-function startStory(replay) {
-  story.replay = replay; story.i = 0;
+// lines：台本（省略時はオープニング）、onEnd：終わったときの処理
+function startStory(replay, lines = STORY, onEnd = null) {
+  story.replay = replay; story.i = 0; story.lines = lines; story.onEnd = onEnd;
   show('story'); playScene();
 }
 function playScene() {
-  const sc = STORY[story.i], prev = STORY[story.i - 1];
+  const sc = story.lines[story.i], prev = story.lines[story.i - 1];
   if (!prev || prev.scene !== sc.scene) $('#storyStage').innerHTML = sceneHTML(sc.scene);
   const el = $('#storyText');
   el.textContent = '';
@@ -68,16 +73,17 @@ function playScene() {
 function finishLine() {
   clearInterval(story.timer);
   story.typing = false;
-  $('#storyText').textContent = STORY[story.i].text;
+  $('#storyText').textContent = story.lines[story.i].text;
   $('#storyNext').classList.add('show');
 }
 function advanceStory() {
   if (story.typing) { finishLine(); return; }
   story.i++;
-  if (story.i >= STORY.length) endStory(); else playScene();
+  if (story.i >= story.lines.length) endStory(); else playScene();
 }
 function endStory() {
   clearInterval(story.timer);
+  if (story.onEnd) { const f = story.onEnd; story.onEnd = null; f(); return; }
   if (story.replay && S) { showHub(); return; }
   show('setup');
   setupReadyAt = Date.now() + 500; // ストーリーを Enter 連打で進めた勢いで決定しないように
@@ -97,4 +103,44 @@ function register() {
     <br><small class="dim">修了すると ボーナス <b class="c-gold">300 CR</b>。あとで 拠点の TRAINING からも始められます。</small></p>
     <div class="row-btns"><button class="btn primary" data-act="tut">チュートリアルを始める（Enter）</button><button class="btn ghost" data-act="skip">スキップ</button></div>`,
   { action: startTutorial, actions: { tut: startTutorial, skip: hubGuide }, closable: false, delay: 300 });
+}
+
+// =========================================================
+// ボス戦の前の会話
+// =========================================================
+const BOSS_TALK = {
+  trojan: { lines: ['ククク… ようこそ、ガーディアン。', 'おまえに ちょっとした 贈り物を 用意した。', '開けてごらん？ ……中身は わたしだがな！'],
+    navi: 'あれが データの森を 荒らした トロイ！ 弱点コードを 打ちこんで！' },
+  ransom: { lines: ['ファイアウォールの データは すべて 預かった。', '返してほしければ…… 力ずくで 取り返してみろ！'],
+    navi: 'ランサムの攻撃は 重いよ。ディフェンダーの シールドを 活用して！' },
+  chaos: { lines: ['秩序？ ルール？ くだらない。', 'このネットの すべてを ぐちゃぐちゃに してやる！'],
+    navi: 'カオスコアは 攻撃が とても速い！ 落ち着いて、1文字ずつ 正確にね。' },
+  omega: { lines: ['よく ここまで 来たな、ガーディアン。', 'ネオグリッドは わたしが 書き換える。', '消えろ。 ――END OF LINE。'],
+    navi: 'これが 最後の戦い……！ みんなの力を 合わせよう！' },
+};
+function bossIntro(node, go) {
+  const sec = sectorOf(S.run.sector), key = sec.boss, e = D.ENEMIES[key], talk = BOSS_TALK[key];
+  if (!talk) { go(); return; }
+  modal(`<div class="boss-talk">
+      <div class="bt-art">${A.enemy(key, e)}</div>
+      <div class="bt-lines"><b class="c-red">${e.name}</b>${talk.lines.map((l, i) => `<p style="animation-delay:${0.3 + i * 0.9}s">「${l}」</p>`).join('')}</div>
+    </div>
+    <div class="bt-navi" style="animation-delay:${0.4 + talk.lines.length * 0.9}s"><div class="g-av">${A.avatar(NAVI)}</div><p>${talk.navi}</p></div>
+    <button class="btn primary" data-act>戦闘開始（Enter）</button>`, { action: go, closable: false, delay: 600 });
+  Snd.lose();
+}
+
+// =========================================================
+// エンディング（セクター4を初めてクリアしたとき）
+// =========================================================
+const ENDING = [
+  { scene: 'restore', text: 'オメガが 消え、ネオグリッドに 静けさが もどった。' },
+  { scene: 'restore', text: 'こわれた データは 少しずつ 修復され、\n人々の くらしにも 光が もどっていく。' },
+  { scene: 'team', text: 'ありがとう、ガーディアン。\nきみと 仲間たちの コードが、この世界を 守ったんだ。' },
+  { scene: 'thanks', text: '――そして 今日も、どこかで 新しい不正プログラムが 生まれている。\nENDLESS で、きみの 腕を みがき続けよう！' },
+];
+function playEnding() {
+  S.story.ending = true;
+  save(true);
+  startStory(true, ENDING, () => { showHub(); toast('🎬 エンディングは 拠点の LOG から いつでも 見られます'); });
 }

@@ -626,7 +626,7 @@ function endBattle(result) {
       rewards += `<div>🏆 クリアボーナス <b class="c-gold">+${bonus} CR</b></div>`;
       if (first && sec.id < D.SECTORS.length) rewards += `<div class="c-lime">🔓 SECTOR ${sec.id + 1}「${D.SECTORS[sec.id].name}」が 解放された！</div>`;
       if (first && sec.id === D.SECTORS.length) rewards += '<div class="c-lime">🌐 ネオグリッドに 平和が もどった！ ありがとう、ガーディアン。</div>';
-      next = showHub;
+      next = first && sec.id === D.SECTORS.length ? playEnding : showHub;
     } else {
       title = 'VICTORY'; sub = '不正プログラムを 駆除した！';
       next = showMap;

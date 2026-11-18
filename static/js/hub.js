@@ -58,6 +58,7 @@ function renderHub() {
     + Array.from({ length: PARTY_MAX - S.party.length }, () => '<div class="mini-av empty"><span>＋</span><small>空き</small></div>').join('');
   $('#hubTeamStats').innerHTML = teamStatsHTML();
 
+  $('#endingBtn').hidden = !S.story.ending;
   const r = S.rec;
   $('#recordBox').innerHTML = [
     ['クリア済みセクター', `${S.cleared} / ${D.SECTORS.length}`], ['勝利 / 戦闘', `${r.wins} / ${r.battles}`],

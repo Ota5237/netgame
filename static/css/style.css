@@ -492,3 +492,18 @@ body[data-tut~="attack"] .vuln, body[data-tut~="defense"] .packet, body[data-tut
 .rank-box .row-btns { margin-top: 6px; }
 .rank-table td { font-size: 14px; }
 .rank-table tr.me td { background: rgba(157, 255, 77, .12); }
+
+/* ---------- ストーリー（ボス会話・エンディング） ---------- */
+.boss-talk { display: flex; gap: 16px; align-items: center; }
+.bt-art { width: 120px; flex: none; filter: drop-shadow(0 0 16px rgba(255, 61, 154, .6)); animation: hover 2.2s ease-in-out infinite; }
+.bt-lines b { font-size: 18px; }
+.bt-lines p, .bt-navi { opacity: 0; animation: appear .5s forwards; }
+.bt-lines p { margin: 6px 0; font-size: 15px; }
+.bt-navi { display: flex; gap: 10px; align-items: center; margin-top: 14px; padding: 8px 12px; border: 1px solid var(--gold); border-radius: 4px; background: rgba(40, 30, 6, .5); }
+.bt-navi .g-av { width: 46px; flex: none; }
+.bt-navi .g-av svg { width: 46px; height: 46px; }
+.bt-navi p { margin: 0; font-size: 14px; }
+.thanks { position: absolute; top: 22%; left: 0; right: 0; text-align: center; }
+.thanks .logo { font-size: clamp(40px, 9vw, 96px); }
+.thanks p { color: #b9d8ff; letter-spacing: .3em; font-family: var(--disp); }
+@keyframes appear { to { opacity: 1; } }

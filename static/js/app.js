@@ -73,6 +73,7 @@ async function init() {
   $('#pull10').onclick = () => pull(10);
   $('#gachaResult').addEventListener('click', () => { if (gachaSkip) gachaSkip(); });
   $('#openingBtn').onclick = () => startStory(true);
+  $('#endingBtn').onclick = () => startStory(true, ENDING);
   $('#resetBtn').onclick = async () => {
     if (confirm('ほんとうに データを初期化しますか？（仲間・CR・進行がすべて消えます）')) { await resetSave(); location.reload(); }
   };
