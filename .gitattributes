@@ -1,0 +1,5 @@
+# 改行コードをそろえる（PythonAnywhere などの Linux では LF、バッチファイルだけ Windows 用の CRLF）
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary
+*.ico binary

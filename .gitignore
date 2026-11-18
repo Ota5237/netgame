@@ -1,0 +1,16 @@
+# セーブデータ（プレイヤーの進行。リポジトリに入れない）
+data/
+
+# 旧ゲーム（タイプっこ育成日記）のバックアップ。PC の中だけに残す
+_legacy_v1/
+
+# Python
+__pycache__/
+*.pyc
+
+# exe・Web 用 zip のビルドで作られるもの
+.venv-build/
+build/
+dist/
+*.spec
+static/icons/app.ico

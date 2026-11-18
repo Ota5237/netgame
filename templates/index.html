@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ネットガーディアンズ</title>
+  <meta name="theme-color" content="#0b1226">
+  <meta name="description" content="コードを打って仮想世界を守る、タイピング・サイバーディフェンス">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+  <link rel="icon" href="{{ url_for('static', filename='icons/favicon-32.png') }}" type="image/png">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1+Code:wght@400;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <!-- タイトル -->
+  <section id="screen-title" class="screen overlay">
+    <div class="horizon"></div>
+    <div class="title-wrap">
+      <h1 class="logo glitch" data-text="NET GUARDIANS">NET GUARDIANS</h1>
+      <p class="title-sub">ネットガーディアンズ ― タイピング・サイバーディフェンス</p>
+      <p id="titleGreet" class="title-greet"></p>
+      <p class="press">&gt; PRESS ANY KEY<span class="cursor">_</span></p>
+    </div>
+  </section>
+
+  <!-- ストーリー -->
+  <section id="screen-story" class="screen overlay">
+    <div class="horizon"></div>
+    <button id="skipBtn" class="skip" type="button">SKIP ▶▶</button>
+    <div id="storyStage" class="story-stage"></div>
+    <div class="story-box">
+      <p id="storyText"></p>
+      <span id="storyNext" class="story-next">▼</span>
+    </div>
+  </section>
+
+  <!-- コールサイン登録 -->
+  <section id="screen-setup" class="screen overlay">
+    <div class="horizon"></div>
+    <div class="panel setup">
+      <p class="mono dim">&gt; register --callsign</p>
+      <h2>コールサインを登録</h2>
+      <p class="dim">きみの名前（ハッカーネーム）を入力してね。</p>
+      <input id="nameInput" maxlength="12" placeholder="例：shiro" autocomplete="off" spellcheck="false">
+      <button id="startBtn" class="btn primary">登録して ログイン</button>
+    </div>
+  </section>
+
+  <div id="app">
+    <header class="top">
+      <div class="brand"><span class="brand-mark">◢◤</span> NET GUARDIANS</div>
+      <div class="hud">
+        <button id="installBtn" class="btn small" hidden>📲 アプリとして入れる</button>
+        <span class="callsign" id="hudName"></span>
+        <span class="cr" id="hudCr">0 CR</span>
+        <button id="soundBtn" class="icon-btn" title="サウンド">🔊</button>
+      </div>
+    </header>
+
+    <!-- 拠点 -->
+    <section id="screen-hub" class="screen">
+      <div class="hub-grid">
+        <div class="panel mission">
+          <h3>MISSION <small>ミッション</small></h3>
+          <div id="runBox"></div>
+          <div id="sectorList" class="sector-list"></div>
+        </div>
+        <div class="panel team">
+          <h3>TEAM <small>チーム（最大5人）</small></h3>
+          <div id="hubParty" class="party-row"></div>
+          <div id="hubTeamStats" class="team-stats"></div>
+          <button id="editPartyBtn" class="btn">チーム編成</button>
+        </div>
+        <div class="panel recruit">
+          <h3>RECRUIT <small>リクルート</small></h3>
+          <p class="dim">CR を使って AIエージェントを 仲間にしよう。</p>
+          <button id="goGachaBtn" class="btn primary">リクルート端末へ</button>
+        </div>
+        <div class="panel records">
+          <h3>LOG <small>きろく</small></h3>
+          <div id="recordBox" class="rec-grid"></div>
+          <div class="row-btns">
+            <button id="openingBtn" class="btn small">🎬 オープニング</button>
+            <button id="resetBtn" class="btn small ghost">データ初期化</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- チーム編成 -->
+    <section id="screen-party" class="screen">
+      <div class="panel">
+        <div class="panel-head"><h3>TEAM EDIT <small>チーム編成</small></h3><button class="btn small back-hub">◀ 拠点へ</button></div>
+        <p class="dim">カードをクリックで チームに入れる／外す。上のチーム枠は最大5人。</p>
+        <div id="partySlots" class="party-slots"></div>
+        <div id="partyStats" class="team-stats"></div>
+        <h4>所持エージェント <span id="ownedCount" class="dim"></span></h4>
+        <div id="ownedList" class="card-grid"></div>
+      </div>
+    </section>
+
+    <!-- ガチャ -->
+    <section id="screen-gacha" class="screen">
+      <div class="panel gacha">
+        <div class="panel-head"><h3>RECRUIT TERMINAL <small>リクルート端末</small></h3><button class="btn small back-hub">◀ 拠点へ</button></div>
+        <div class="gacha-term">
+          <pre id="gachaScreen" class="mono">&gt; recruit.agent()
+  ネオグリッドに散らばる AIエージェントの信号を解読し、仲間にします。</pre>
+          <div id="gachaResult" class="card-grid gacha-result"></div>
+        </div>
+        <div class="gacha-btns">
+          <button id="pull1" class="btn primary">1回 解読 <small>100 CR</small></button>
+          <button id="pull10" class="btn primary">10回 解読 <small>900 CR・SR以上1体確定</small></button>
+        </div>
+        <p class="rates dim">出現率：SSR 1.5% ／ SR 8.5% ／ R 30% ／ N 60%（ゲーム内通貨のみ）。同じエージェントが出ると ★が上がって強くなる（最大★5）。</p>
+      </div>
+    </section>
+
+    <!-- マップ -->
+    <section id="screen-map" class="screen">
+      <div class="map-head">
+        <div><b id="mapSector"></b> <small id="mapSectorEn" class="dim"></small></div>
+        <div class="hpbox"><span>TEAM HP</span><div class="bar"><i id="mapHpBar"></i></div><span id="mapHpText"></span></div>
+      </div>
+      <div id="mapArea" class="map-area"></div>
+      <div class="terminal">
+        <div id="mapOptions" class="map-options"></div>
+        <div class="prompt"><span class="ps1" id="mapPs1"></span><span id="mapBuf" class="buf"></span><span class="cursor">_</span></div>
+        <p class="dim small">進みたいノードのコマンドを入力して移動。<code>exit</code> で拠点に戻る（進行は保存されます）。Backspace で入力をやり直し。</p>
+        <div class="ime-warn">日本語入力（IME）をオフにしてね！</div>
+      </div>
+    </section>
+
+    <!-- バトル -->
+    <section id="screen-battle" class="screen">
+      <div class="battle-head">
+        <div><b id="btlTitle"></b></div>
+        <div class="status-icons" id="btlStatus"></div>
+        <div>COMBO <b id="btlCombo">0</b></div>
+        <button id="pauseBtn" class="btn small">II 一時停止</button>
+      </div>
+      <div class="arena" id="arena">
+        <svg class="fx" id="fxSvg"></svg>
+        <div id="btlEnemies"></div>
+        <div class="team-core" id="teamCore">
+          <div class="shield-ring" id="shieldRing"></div>
+          <div class="core-orb" id="coreOrb"></div>
+          <div id="btlParty" class="btl-party"></div>
+        </div>
+        <div class="core-hp"><span>TEAM HP</span><div class="bar"><i id="btlHpBar"></i></div><span id="btlHpText"></span></div>
+        <div id="fxLayer" class="fx-layer"></div>
+      </div>
+      <div id="skillBar" class="skill-bar"></div>
+      <div class="terminal battle-term">
+        <div class="prompt"><span class="ps1">guard@neogrid:~$ </span><span id="btlBuf" class="buf"></span><span class="cursor">_</span></div>
+        <p class="dim small">流れてくる<b class="c-red">攻撃パケット</b>を打って防御、敵の下の<b class="c-cyan">弱点コード</b>を打って攻撃、<b class="c-gold">/スキル</b>は使えるとき打つと発動。Backspace でやり直し、Esc で一時停止。</p>
+        <div class="ime-warn">日本語入力（IME）をオフにしてね！</div>
+      </div>
+      <div id="pauseOverlay" class="pause hidden">
+        <div class="panel">
+          <h2>PAUSE</h2>
+          <button id="resumeBtn" class="btn primary">再開する（Esc）</button>
+          <button id="retreatBtn" class="btn ghost">撤退する（ラン終了）</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-box panel"><div id="modalBody"></div></div>
+  </div>
+  <div id="toast" class="toast"></div>
+  <!-- チュートリアルの案内（ナビ） -->
+  <div id="guide" class="guide hidden">
+    <div class="g-av" id="guideAv"></div>
+    <div class="g-body">
+      <div class="g-title" id="guideTitle"></div>
+      <div class="g-text" id="guideText"></div>
+      <button id="guideClose" class="btn small" hidden>OK</button>
+    </div>
+  </div>
+
+  <script>window.SERVER_SAVE = {{ 'true' if server_save else 'false' }};</script>
+  <script src="{{ url_for('static', filename='js/data.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/art.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/typing.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
