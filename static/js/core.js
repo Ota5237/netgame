@@ -82,12 +82,13 @@ const Snd = {
   tone(f, d = 0.08, type = 'square', v = 0.03, when = 0) {
     if (S && !S.sound) return;
     try {
-      this.ctx = this.ctx || new (window.AudioContext || window.webkitAudioContext)();
-      const t = this.ctx.currentTime + when;
-      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      const ctx = Music.ctx; // 効果音は BGM と同じ仕組みの「効果音の音量」を通して鳴らす
+      if (!ctx) return;
+      const t = ctx.currentTime + when;
+      const o = ctx.createOscillator(), g = ctx.createGain();
       o.type = type; o.frequency.value = f;
       g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-      o.connect(g).connect(this.ctx.destination); o.start(t); o.stop(t + d);
+      o.connect(g).connect(Music.se); o.start(t); o.stop(t + d);
     } catch (e) { }
   },
   key() { this.tone(1700 + Math.random() * 200, 0.02, 'square', 0.012); },
@@ -114,6 +115,8 @@ function show(id) {
   document.body.dataset.screen = id;
   document.querySelectorAll('.ime-warn').forEach(e => e.classList.remove('show'));
   hideGuide();
+  // 曲の切り替え（ブラウザの制限で、実際に音が出るのは最初のキー操作のあとから）
+  if (id !== 'battle') Music.play(musicFor(id));
 }
 let toastTimer = null;
 function toast(msg, ms = 2400) {
@@ -222,6 +225,8 @@ function migrate(s) {
   s.rec.endlessWave = s.rec.endlessWave || 0;
   s.daily = s.daily || {};
   s.story = s.story || {};
+  if (typeof s.bgmVol !== 'number') s.bgmVol = 0.45;
+  if (typeof s.seVol !== 'number') s.seVol = 0.8;
   return s;
 }
 

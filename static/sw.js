@@ -10,6 +10,7 @@ const APP_SHELL = [
   '/static/js/art.js',
   '/static/js/typing.js',
   '/static/js/core.js',
+  '/static/js/music.js',
   '/static/js/story.js',
   '/static/js/tutorial.js',
   '/static/js/hub.js',

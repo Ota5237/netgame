@@ -21,6 +21,7 @@ function showTitle() {
 }
 function leaveTitle() {
   if (Date.now() < titleReadyAt) return;
+  Music.ensure();
   Snd.boot();
   if (S) { showHub(); toast(`ログイン完了。おかえり、<b>${esc(S.name)}</b>。`); }
   else startStory(false);

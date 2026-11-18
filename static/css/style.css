@@ -507,3 +507,8 @@ body[data-tut~="attack"] .vuln, body[data-tut~="defense"] .packet, body[data-tut
 .thanks .logo { font-size: clamp(40px, 9vw, 96px); }
 .thanks p { color: #b9d8ff; letter-spacing: .3em; font-family: var(--disp); }
 @keyframes appear { to { opacity: 1; } }
+
+/* ---------- 音量 ---------- */
+.vol { display: grid; grid-template-columns: 110px 1fr 40px; align-items: center; gap: 10px; margin: 8px 0; }
+.vol input { width: 100%; accent-color: var(--cyan); }
+.vol b { text-align: right; color: var(--cyan); }

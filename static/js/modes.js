@@ -160,6 +160,7 @@ function nextWave() {
     if (B.mode === 'endless') { const w = endlessWave(B.wave); B.sec = w.sec; list = w.list; }
     else list = B.daily.waves[B.wave - 1];
     setEnemies(list);
+    Music.play(musicFor('battle')); // ボスのウェーブではボスの曲に
     $('#btlTitle').textContent = B.mode === 'endless' ? `ENDLESS ― WAVE ${B.wave}` : `DAILY ― ${B.daily.rule.name} ― WAVE ${B.wave}/3`;
     waveBanner(B.wave);
     floatAt(corePt(), '+' + heal, 'heal');

@@ -80,7 +80,7 @@ async function init() {
   $('#settingsBtn').onclick = openSettings;
   // スマホ・タブレット（タッチ操作が中心の端末）で開いたら、キーボードが必要なことを知らせる
   if (matchMedia('(hover: none) and (pointer: coarse)').matches) $('#mobileNote').hidden = false;
-  $('#soundBtn').onclick = () => { if (!S) return; S.sound = !S.sound; save(); updateHud(); };
+  $('#soundBtn').onclick = () => { if (!S) return; S.sound = !S.sound; save(); updateHud(); Music.applyVolume(); };
   $('#pauseBtn').onclick = () => togglePause();
   $('#resumeBtn').onclick = () => togglePause(false);
   $('#retreatBtn').onclick = () => {

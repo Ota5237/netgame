@@ -153,6 +153,7 @@ function beginBattle(cfg) {
   measure();
   setEnemies(cfg.list);
   if (B.node.type === 'boss') toast(`◉ ボス <b>${B.enemies[0].name}</b> が あらわれた！`);
+  Music.play(musicFor('battle'));
   if (L === 2) B.enemies[0].timer = 1.2;
   if (L) battleGuide();
   const mine = B;
