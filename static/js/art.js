@@ -172,36 +172,205 @@ window.Art = (function () {
   }
 
   // ========================================================
-  // 敵
+  // 敵：種類ごとのデザイン（viewBox 0 0 100 100）
   // ========================================================
   function enemy(key, e) {
     const id = 'e' + (++uid);
-    const r = rng(key);
-    const n = e.boss ? 18 : 12;
-    const R = e.boss ? 44 : 38;
-    const pts = [];
-    for (let i = 0; i < n; i++) {
-      const a = (i / n) * Math.PI * 2;
-      const rr = R * (i % 2 ? 0.72 + r() * 0.12 : 0.95 + r() * 0.08);
-      pts.push(`${(50 + Math.cos(a) * rr).toFixed(1)},${(52 + Math.sin(a) * rr).toFixed(1)}`);
-    }
     const h = e.hue;
-    const stripes = Array.from({ length: 3 }, () =>
-      `<rect x="${(10 + r() * 50).toFixed(0)}" y="${(20 + r() * 60).toFixed(0)}" width="${(18 + r() * 26).toFixed(0)}" height="2.5" fill="${hsl((h + 180) % 360, 100, 70)}" opacity=".7"/>`).join('');
-    const crown = e.boss
-      ? `<path d="M30 16 L36 2 L44 13 L50 0 L56 13 L64 2 L70 16 Z" fill="${hsl(h, 90, 55)}" stroke="#fff" stroke-width="1.5"/>`
-      : '';
+    const C = {
+      main: hsl(h, 85, 58), dark: hsl(h, 70, 26), light: hsl(h, 95, 76), line: hsl(h, 100, 72),
+      acc: hsl((h + 180) % 360, 100, 64), g: `url(#${id}g)`, f: `url(#${id}f)`,
+    };
+    // 目（黒目＋光る瞳＋ハイライト）
+    const eye = (cx, cy, r, color = hsl((h + 40) % 360, 100, 60)) =>
+      `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#0a0f1e" stroke="${C.line}" stroke-width="1"/>
+       <circle cx="${cx}" cy="${cy}" r="${r * 0.55}" fill="${color}" filter="${C.f}"/>
+       <circle cx="${cx - r * 0.3}" cy="${cy - r * 0.32}" r="${r * 0.22}" fill="#fff"/>`;
+    const teeth = (x, y, w, n = 5) => `<path d="M${x} ${y} ${Array.from({ length: n }, (_, i) => `l${w / n / 2} 4 l${w / n / 2} -4`).join(' ')}" fill="none" stroke="#0a0f1e" stroke-width="2.4" stroke-linejoin="round"/>`;
+    const art = (ENEMY_ART[key] || ENEMY_ART.blob)(C, eye, teeth, rng(key));
     return `<svg viewBox="0 0 100 100" class="en">
-      <defs><radialGradient id="${id}g" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="${hsl(h, 90, 62)}"/><stop offset="1" stop-color="${hsl(h, 80, 22)}"/></radialGradient></defs>
-      ${crown}
-      <polygon points="${pts.join(' ')}" fill="url(#${id}g)" stroke="${hsl(h, 100, 70)}" stroke-width="2"/>
-      ${stripes}
-      <circle cx="50" cy="50" r="${e.boss ? 15 : 12}" fill="#0a0f1e"/>
-      <circle cx="50" cy="50" r="${e.boss ? 8 : 6}" fill="${hsl((h + 40) % 360, 100, 60)}"/>
-      <circle cx="47" cy="47" r="2.5" fill="#fff"/>
-      <path d="M36 70 l5 -4 l5 4 l5 -4 l5 4 l5 -4 l5 4" fill="none" stroke="#0a0f1e" stroke-width="3"/>
+      <defs>
+        <radialGradient id="${id}g" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="${C.light}"/><stop offset=".55" stop-color="${C.main}"/><stop offset="1" stop-color="${C.dark}"/></radialGradient>
+        <filter id="${id}f" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      ${art}
     </svg>`;
   }
+
+  // 形のライブラリ。引数：C=色、eye=目、teeth=歯、r=乱数
+  const ENEMY_ART = {
+    // 従来の不定形（予備）
+    blob: (C, eye, teeth, r) => {
+      const pts = Array.from({ length: 12 }, (_, i) => {
+        const a = (i / 12) * Math.PI * 2, rr = 36 * (i % 2 ? 0.75 + r() * 0.1 : 0.98);
+        return `${(50 + Math.cos(a) * rr).toFixed(1)},${(52 + Math.sin(a) * rr).toFixed(1)}`;
+      }).join(' ');
+      return `<polygon points="${pts}" fill="${C.g}" stroke="${C.line}" stroke-width="2"/>${eye(50, 48, 12)}${teeth(36, 68, 28)}`;
+    },
+    // スパム：封筒のモンスター
+    spam: (C, eye, teeth) => `
+      <path d="M14 22 l8 8 M86 22 l-8 8 M50 8 v10" stroke="${C.acc}" stroke-width="2.5" stroke-linecap="round" filter="${C.f}"/>
+      <rect x="16" y="30" width="68" height="46" rx="6" fill="${C.g}" stroke="${C.line}" stroke-width="2"/>
+      <path d="M16 34 L50 60 L84 34" fill="${C.dark}" stroke="${C.line}" stroke-width="2" stroke-linejoin="round"/>
+      ${eye(50, 46, 9)}
+      <path d="M30 66 Q50 76 70 66" fill="none" stroke="#0a0f1e" stroke-width="3"/>
+      <text x="74" y="73" font-size="11" font-weight="900" fill="${C.acc}" font-family="monospace">@</text>
+      <path d="M10 86 h16 M74 86 h16" stroke="${C.acc}" stroke-width="2" opacity=".6"/>`,
+    // ワーム：体節のある虫
+    worm: (C, eye) => `
+      ${[[22, 74, 9], [34, 66, 11], [48, 60, 13]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${C.g}" stroke="${C.line}" stroke-width="1.6"/>`).join('')}
+      <circle cx="66" cy="46" r="20" fill="${C.g}" stroke="${C.line}" stroke-width="2"/>
+      <path d="M78 58 l12 4 l-10 3 M76 62 l8 10 l-10 -4" fill="${C.acc}" stroke="${C.dark}" stroke-width="1"/>
+      ${eye(70, 42, 8)}
+      <path d="M58 30 q-4 -10 -10 -12 M70 27 q2 -10 8 -13" fill="none" stroke="${C.line}" stroke-width="2" stroke-linecap="round"/>`,
+    // バグ：カブトムシ型
+    bug: (C, eye) => `
+      <path d="M30 46 l-14 -6 M30 58 l-16 2 M32 70 l-12 10 M70 46 l14 -6 M70 58 l16 2 M68 70 l12 10" stroke="${C.dark}" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M42 22 q-6 -12 -14 -12 M58 22 q6 -12 14 -12" fill="none" stroke="${C.line}" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="50" cy="60" rx="24" ry="28" fill="${C.g}" stroke="${C.line}" stroke-width="2"/>
+      <path d="M50 36 V88" stroke="${C.dark}" stroke-width="2"/>
+      <ellipse cx="50" cy="30" rx="15" ry="11" fill="${C.dark}" stroke="${C.line}" stroke-width="1.6"/>
+      ${eye(44, 29, 4.5)}${eye(56, 29, 4.5)}
+      <circle cx="40" cy="62" r="3" fill="${C.acc}" opacity=".8"/><circle cx="60" cy="70" r="3" fill="${C.acc}" opacity=".8"/>`,
+    // トロイ（ボス）：チェスのナイトのような木馬の頭
+    trojan: (C, eye) => `
+      <path d="M20 94 H82 L78 82 H24 Z" fill="${C.dark}" stroke="${C.line}" stroke-width="2"/>
+      <path d="M28 82 Q26 60 34 46 Q30 36 36 26 L42 8 L50 22 Q72 22 80 42 Q84 52 76 56 Q68 54 60 50 Q56 62 62 82 Z" fill="${C.g}" stroke="${C.line}" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M36 28 Q30 40 32 54 M40 30 Q36 44 38 60" fill="none" stroke="${C.dark}" stroke-width="2.5"/>
+      ${eye(58, 34, 6)}
+      <circle cx="74" cy="46" r="2.2" fill="#0a0f1e"/>
+      <path d="M44 66 h12 M44 72 h12" stroke="${C.acc}" stroke-width="2" filter="${C.f}"/>
+      <path d="M20 94 H82" stroke="${C.acc}" stroke-width="1.5" filter="${C.f}"/>`,
+    // アドウェア：ポップアップ広告のウィンドウ
+    adware: (C, eye) => `
+      <rect x="12" y="18" width="76" height="62" rx="5" fill="${C.g}" stroke="${C.line}" stroke-width="2"/>
+      <rect x="12" y="18" width="76" height="12" rx="5" fill="${C.dark}"/>
+      <circle cx="20" cy="24" r="2.2" fill="#ff5f56"/><circle cx="27" cy="24" r="2.2" fill="#ffbd2e"/><circle cx="34" cy="24" r="2.2" fill="#27c93f"/>
+      <path d="M78 21 l6 6 M84 21 l-6 6" stroke="#fff" stroke-width="1.8"/>
+      <text x="22" y="52" font-size="16" font-weight="900" fill="#fff" font-family="monospace">AD!</text>
+      ${eye(66, 50, 10)}
+      <rect x="22" y="62" width="56" height="10" rx="5" fill="${C.acc}" filter="${C.f}"/>
+      <text x="36" y="70" font-size="7.5" font-weight="900" fill="#0a0f1e" font-family="monospace">CLICK ME</text>
+      <path d="M30 80 l-6 12 M70 80 l6 12" stroke="${C.dark}" stroke-width="4" stroke-linecap="round"/>`,
+    // キーロガー：キーボードの怪物
+    keylog: (C, eye, teeth) => `
+      <path d="M86 70 Q96 82 84 92 Q74 98 66 90" fill="none" stroke="${C.dark}" stroke-width="3"/>
+      <rect x="10" y="40" width="80" height="40" rx="7" fill="${C.g}" stroke="${C.line}" stroke-width="2"/>
+      ${[0, 1, 2].map(row => Array.from({ length: 7 - row }, (_, i) => `<rect x="${16 + row * 4 + i * 10}" y="${46 + row * 10}" width="8" height="7" rx="1.5" fill="${C.dark}" stroke="${C.line}" stroke-width=".6"/>`).join('')).join('')}
+      <path d="M30 40 Q30 18 50 16 Q70 18 70 40 Z" fill="${C.g}" stroke="${C.line}" stroke-width="2"/>
+      ${eye(50, 30, 9)}
+      ${teeth(38, 40, 24, 4)}`,
+    // ボットネット：中央のノードにつながった小型ボット群
+    botnet: (C, eye) => {
+      const bots = [[18, 26], [82, 26], [16, 74], [84, 74]];
+      return `${bots.map(([x, y]) => `<path d="M50 50 L${x} ${y}" stroke="${C.acc}" stroke-width="1.6" stroke-dasharray="3 3" filter="${C.f}"/>`).join('')}
+        ${bots.map(([x, y]) => `<rect x="${x - 9}" y="${y - 8}" width="18" height="16" rx="4" fill="${C.g}" stroke="${C.line}" stroke-width="1.4"/><circle cx="${x}" cy="${y}" r="3" fill="${C.acc}" filter="${C.f}"/>`).join('')}
+        <circle cx="50" cy="50" r="18" fill="${C.g}" stroke="${C.line}" stroke-width="2"/>
+        ${eye(50, 50, 9)}`;
+    },
+    // ランサム（ボス）：南京錠の怪物
+    ransom: (C, eye, teeth) => `
+      <path d="M30 46 V30 Q30 8 50 8 Q70 8 70 30 V46" fill="none" stroke="${C.line}" stroke-width="8" stroke-linecap="round"/>
+      <path d="M30 46 V30 Q30 8 50 8 Q70 8 70 30 V46" fill="none" stroke="${C.dark}" stroke-width="4" stroke-linecap="round"/>
+      <rect x="16" y="42" width="68" height="50" rx="9" fill="${C.g}" stroke="${C.line}" stroke-width="2.4"/>
+      <path d="M8 60 q6 -6 12 0 M80 60 q6 -6 12 0" fill="none" stroke="${C.acc}" stroke-width="2.5"/>
+      ${eye(36, 60, 7)}${eye(64, 60, 7)}
+      <path d="M50 66 a5 5 0 1 1 0.1 0 l3 12 h-6.2 Z" fill="#0a0f1e" stroke="${C.acc}" stroke-width="1"/>
+      ${teeth(30, 84, 40, 6)}
+      <text x="20" y="54" font-size="7" font-weight="900" fill="${C.acc}" font-family="monospace">$$$</text>`,
+    // ルートキット：根を張る球体
+    rootkit: (C, eye) => `
+      ${[-60, -30, 0, 30, 60].map((a, i) => { const rad = (90 + a) * Math.PI / 180, x = 50 + Math.cos(rad) * 44, y = 44 + Math.sin(rad) * 50;
+        return `<path d="M50 50 Q${50 + Math.cos(rad) * 20 + (i - 2) * 6} ${60 + i * 2} ${x.toFixed(1)} ${y.toFixed(1)}" fill="none" stroke="${C.dark}" stroke-width="${5 - Math.abs(i - 2)}" stroke-linecap="round"/>`; }).join('')}
+      <circle cx="50" cy="42" r="24" fill="${C.g}" stroke="${C.line}" stroke-width="2"/>
+      <path d="M30 34 Q50 26 70 34" fill="none" stroke="${C.acc}" stroke-width="1.5" filter="${C.f}"/>
+      ${eye(42, 42, 6)}${eye(58, 42, 6)}
+      <path d="M42 54 Q50 58 58 54" fill="none" stroke="#0a0f1e" stroke-width="2.5"/>`,
+    // ファントム：幽霊
+    phantom: (C, eye) => `
+      <path d="M22 90 V46 Q22 12 50 12 Q78 12 78 46 V90 L70 82 L62 90 L54 82 L46 90 L38 82 L30 90 Z" fill="${C.g}" stroke="${C.line}" stroke-width="2" opacity=".85"/>
+      <path d="M14 54 Q20 44 24 52 M86 54 Q80 44 76 52" fill="none" stroke="${C.line}" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="40" cy="44" rx="6" ry="8" fill="#0a0f1e"/><ellipse cx="60" cy="44" rx="6" ry="8" fill="#0a0f1e"/>
+      <circle cx="40" cy="46" r="2.6" fill="${C.acc}" filter="${C.f}"/><circle cx="60" cy="46" r="2.6" fill="${C.acc}" filter="${C.f}"/>
+      <ellipse cx="50" cy="62" rx="6" ry="4" fill="#0a0f1e" opacity=".8"/>`,
+    // ゼロデイ：多面体の結晶
+    zeroday: (C, eye) => `
+      <polygon points="50,6 82,30 74,76 50,94 26,76 18,30" fill="${C.g}" stroke="${C.line}" stroke-width="2"/>
+      <path d="M50 6 L50 94 M18 30 L82 30 M26 76 L74 76 M50 6 L26 76 M50 6 L74 76" stroke="${C.dark}" stroke-width="1.2" opacity=".7"/>
+      ${eye(50, 44, 10)}
+      <text x="40" y="70" font-size="14" font-weight="900" fill="${C.acc}" font-family="monospace" filter="${C.f}">0d</text>`,
+    // カオスコア（ボス）：渦巻くコア
+    chaos: (C, eye) => `
+      ${Array.from({ length: 10 }, (_, i) => { const a = i * 36 * Math.PI / 180; return `<path d="M${(50 + Math.cos(a) * 30).toFixed(1)} ${(50 + Math.sin(a) * 30).toFixed(1)} L${(50 + Math.cos(a + 0.25) * 47).toFixed(1)} ${(50 + Math.sin(a + 0.25) * 47).toFixed(1)} L${(50 + Math.cos(a + 0.5) * 30).toFixed(1)} ${(50 + Math.sin(a + 0.5) * 30).toFixed(1)}" fill="${C.dark}" stroke="${C.line}" stroke-width="1.2"/>`; }).join('')}
+      <circle cx="50" cy="50" r="31" fill="${C.g}" stroke="${C.line}" stroke-width="2"/>
+      <path d="M50 24 A26 26 0 0 1 76 50 M50 76 A26 26 0 0 1 24 50" fill="none" stroke="${C.acc}" stroke-width="2.4" filter="${C.f}"/>
+      <path d="M50 32 A18 18 0 0 0 32 50 M50 68 A18 18 0 0 0 68 50" fill="none" stroke="${C.light}" stroke-width="1.6"/>
+      ${eye(50, 50, 11)}`,
+    // グリッチ：崩れたピクセルの塊
+    glitch: (C, eye, teeth, r) => {
+      const cells = [];
+      for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) {
+        const d = Math.hypot(x - 3, y - 3);
+        if (d > 3.3 || r() < 0.08) continue;
+        const shift = y % 3 === 1 ? 4 : 0;
+        cells.push(`<rect x="${18 + x * 9 + shift}" y="${16 + y * 9}" width="8.4" height="8.4" fill="${r() < 0.2 ? C.acc : r() < 0.5 ? C.main : C.dark}" opacity="${0.75 + r() * 0.25}"/>`);
+      }
+      return `${cells.join('')}<rect x="12" y="40" width="30" height="3" fill="${C.acc}" opacity=".8"/><rect x="60" y="62" width="30" height="3" fill="#ff3d9a" opacity=".8"/>${eye(50, 46, 9)}`;
+    },
+    // デーモン：角の生えた悪魔
+    daemon: (C, eye, teeth) => `
+      <path d="M30 34 Q14 20 18 4 Q30 16 40 26 Z M70 34 Q86 20 82 4 Q70 16 60 26 Z" fill="${C.dark}" stroke="${C.line}" stroke-width="1.6"/>
+      <path d="M22 50 Q22 22 50 22 Q78 22 78 50 Q78 72 62 84 L50 92 L38 84 Q22 72 22 50 Z" fill="${C.g}" stroke="${C.line}" stroke-width="2"/>
+      <path d="M33 46 L45 50 L33 52 Z M67 46 L55 50 L67 52 Z" fill="${C.acc}" filter="${C.f}"/>
+      <path d="M36 64 Q50 76 64 64" fill="#0a0f1e"/>
+      ${teeth(38, 65, 24, 4)}
+      <path d="M80 70 Q94 76 90 90 l4 -2" fill="none" stroke="${C.dark}" stroke-width="3" stroke-linecap="round"/>`,
+    // ミラー：左右反転した破片
+    mirror: (C, eye) => `
+      <polygon points="50,6 84,40 70,92 50,80" fill="${C.g}" stroke="${C.line}" stroke-width="2"/>
+      <polygon points="50,6 16,40 30,92 50,80" fill="${C.dark}" stroke="${C.line}" stroke-width="2" opacity=".9"/>
+      <path d="M50 6 V80" stroke="#fff" stroke-width="1.5" opacity=".8" filter="${C.f}"/>
+      ${eye(62, 42, 8)}${eye(38, 42, 8, '#ff3d9a')}
+      <path d="M56 62 Q62 66 68 62 M44 62 Q38 66 32 62" fill="none" stroke="#0a0f1e" stroke-width="2.4"/>`,
+    // オメガ（ボス）：輪に囲まれた巨大な目
+    omega: (C, eye) => `
+      ${Array.from({ length: 12 }, (_, i) => { const a = i * 30 * Math.PI / 180; return `<path d="M${(50 + Math.cos(a) * 36).toFixed(1)} ${(50 + Math.sin(a) * 36).toFixed(1)} L${(50 + Math.cos(a) * 48).toFixed(1)} ${(50 + Math.sin(a) * 48).toFixed(1)}" stroke="${C.line}" stroke-width="3" stroke-linecap="round"/>`; }).join('')}
+      <circle cx="50" cy="50" r="38" fill="none" stroke="${C.acc}" stroke-width="2" stroke-dasharray="6 4" filter="${C.f}"/>
+      <circle cx="50" cy="50" r="31" fill="${C.g}" stroke="${C.line}" stroke-width="2.4"/>
+      <path d="M22 50 Q50 24 78 50 Q50 76 22 50 Z" fill="#0a0f1e" stroke="${C.light}" stroke-width="1.6"/>
+      <circle cx="50" cy="50" r="12" fill="${C.acc}" filter="${C.f}"/>
+      <text x="43" y="56" font-size="17" font-weight="900" fill="#0a0f1e" font-family="serif">Ω</text>
+      <circle cx="45" cy="45" r="2.6" fill="#fff"/>`,
+    // 特訓ドローン：カメラの目のクアッドコプター
+    drone: (C, eye) => `
+      <path d="M22 30 L40 44 M78 30 L60 44 M22 74 L40 58 M78 74 L60 58" stroke="${C.dark}" stroke-width="4"/>
+      ${[[22, 30], [78, 30], [22, 74], [78, 74]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="14" ry="3.5" fill="${C.light}" opacity=".55"/><circle cx="${x}" cy="${y}" r="3.5" fill="${C.dark}" stroke="${C.line}"/>`).join('')}
+      <rect x="34" y="38" width="32" height="26" rx="8" fill="${C.g}" stroke="${C.line}" stroke-width="2"/>
+      ${eye(50, 51, 8)}
+      <circle cx="62" cy="42" r="1.8" fill="#ff3d9a" filter="${C.f}"/>`,
+    // 練習用ダミー：的の付いたかかし
+    dummy: (C) => `
+      <path d="M50 58 V94 M36 94 H64" stroke="${C.dark}" stroke-width="5" stroke-linecap="round"/>
+      <path d="M22 50 H78" stroke="${C.dark}" stroke-width="5" stroke-linecap="round"/>
+      ${[30, 22, 14, 6].map((rr, i) => `<circle cx="50" cy="40" r="${rr}" fill="${i % 2 ? '#f2f6ff' : C.main}" stroke="${C.line}" stroke-width="${i ? 0.8 : 2}"/>`).join('')}
+      <circle cx="50" cy="40" r="2.5" fill="#0a0f1e"/>`,
+    // 練習用タレット：砲台
+    turret: (C, eye) => `
+      <path d="M22 92 L30 70 H70 L78 92 Z" fill="${C.dark}" stroke="${C.line}" stroke-width="2"/>
+      <rect x="46" y="14" width="8" height="30" rx="3" fill="${C.dark}" stroke="${C.line}" stroke-width="1.6" transform="rotate(-25 50 44)"/>
+      <circle cx="50" cy="54" r="20" fill="${C.g}" stroke="${C.line}" stroke-width="2"/>
+      ${eye(50, 54, 8)}
+      <circle cx="68" cy="22" r="3" fill="${C.acc}" filter="${C.f}"/>`,
+    // スパーリングbot：グローブを着けたロボ
+    sparring: (C, eye) => `
+      <rect x="32" y="20" width="36" height="30" rx="8" fill="${C.g}" stroke="${C.line}" stroke-width="2"/>
+      ${eye(42, 34, 5)}${eye(58, 34, 5)}
+      <rect x="36" y="52" width="28" height="30" rx="6" fill="${C.dark}" stroke="${C.line}" stroke-width="1.6"/>
+      <circle cx="20" cy="58" r="11" fill="#ff4d6d" stroke="#fff" stroke-width="1.5"/><circle cx="80" cy="58" r="11" fill="#ff4d6d" stroke="#fff" stroke-width="1.5"/>
+      <path d="M30 56 H36 M64 56 H70" stroke="${C.dark}" stroke-width="5"/>
+      <path d="M50 10 V20" stroke="${C.line}" stroke-width="2"/><circle cx="50" cy="9" r="2.5" fill="${C.acc}" filter="${C.f}"/>
+      <path d="M40 82 V94 M60 82 V94" stroke="${C.dark}" stroke-width="5" stroke-linecap="round"/>`,
+  };
 
   return { avatar, enemy };
 })();
