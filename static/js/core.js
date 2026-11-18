@@ -7,6 +7,13 @@ const SAVE_KEY = 'netguard_save_v2';
 const SAVE_VERSION = 2;
 const MAX_LV = 30, MAX_STARS = 5, PARTY_MAX = 5;
 const TRAVEL_MUL = 0.85; // パケットが届くまでの時間の倍率（小さいほど難しい）
+const SKILL_CHARGE_PER_KEY = 0.12; // 正しく1文字打つごとに、スキルの待ち時間が縮む秒数
+// 難易度（ミッションと特訓に効く）。travel=弾が届くまでの時間、fire=敵が撃つ間隔、reward=報酬
+const DIFFS = {
+  easy: { name: 'やさしい', desc: '弾が遅く、短いコードが中心。報酬 ×0.8', travel: 1.35, fire: 1.2, reward: 0.8 },
+  normal: { name: 'ふつう', desc: '標準の難しさ。', travel: 1, fire: 1, reward: 1 },
+  hard: { name: 'ハード', desc: '弾が速く、大文字や記号の多いコードも出る。報酬 ×1.3', travel: 0.8, fire: 0.9, reward: 1.3 },
+};
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -176,4 +183,26 @@ function card(id, { cls = '', badge = '' } = {}) {
 function teamStatsHTML() {
   const t = team();
   return `<span>TEAM HP <b>${t.hp}</b></span><span>ATK <b>${t.atk}</b></span><span>DEF <b>${t.def}</b></span>`;
+}
+
+// =========================================================
+// 設定（難易度など）
+// =========================================================
+function openSettings() {
+  if (!S) return;
+  const cur = S.difficulty || 'normal';
+  modal(`<h2>⚙ 設定</h2>
+    <h3 class="set-h">難易度 <small class="dim">（ミッションと特訓に反映。エンドレス・デイリーは「ふつう」固定）</small></h3>
+    <div class="diff-list">${Object.entries(DIFFS).map(([k, d]) => `
+      <button class="diff ${k === cur ? 'on' : ''}" data-diff="${k}"><b>${d.name}</b><small>${d.desc}</small></button>`).join('')}
+    </div>
+    <div id="settingsExtra"></div>
+    <button class="btn primary" data-act>閉じる（Enter）</button>`, { action: null });
+  if (typeof renderSoundSettings === 'function') renderSoundSettings();
+}
+function setDifficulty(k) {
+  S.difficulty = k;
+  save();
+  document.querySelectorAll('.diff').forEach(b => b.classList.toggle('on', b.dataset.diff === k));
+  toast(`難易度を「${DIFFS[k].name}」にしました`);
 }

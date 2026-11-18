@@ -86,43 +86,51 @@ const burst = (pt, color) => fxAt(pt, 'burst ' + color, '', 550);
 const floatAt = (pt, text, cls) => fxAt(pt, 'float ' + cls, text);
 
 // ---------- 戦闘の開始 ----------
+// マップのノードから戦闘を始める（通常のミッション・チュートリアル）
 function startBattle(node) {
   const sec = sectorOf(S.run.sector);
-  const mk = (key, mul = {}) => {
-    const e = D.ENEMIES[key];
-    const hp = Math.round(e.hp * sec.hpMul * (mul.hp || 1));
-    return { key, name: (mul.prefix || '') + e.name, def: e, hp, maxHp: hp, power: e.power * (mul.power || 1), pending: 0, side: 1,
-      interval: e.interval * (mul.interval || 1), travel: e.travel, pool: e.pool, timer: rand(1.2, 2.6), boss: !!e.boss };
-  };
-  let enemies;
   const L = node.lesson || 0; // チュートリアルのレッスン番号（1〜4）
-  if (L === 1) enemies = [mk('dummy')];
-  else if (L === 2) enemies = [mk('turret')];
-  else if (L === 3) enemies = [mk('sparring')];
-  else if (L === 4) enemies = [mk('spam', { hp: 0.7 }), mk('bug', { hp: 0.8 })];
-  else if (node.type === 'boss') enemies = [mk(sec.boss)];
-  else if (node.type === 'elite') enemies = [mk(pick(sec.enemies), { hp: 2.2, power: 1.3, interval: 0.85, prefix: '強化' }), mk(pick(sec.enemies))];
-  else enemies = S.run.pos[0] >= 3 || Math.random() < 0.35 ? [mk(pick(sec.enemies)), mk(pick(sec.enemies))] : [mk(pick(sec.enemies))];
-  // レッスン1〜3は、左下の説明と重ならないよう敵を右上に置く
-  enemies.forEach((e, i) => { e.idx = i; e.pos = L && L < 4 ? { x: 0.74, y: 0.24 } : enemySlot(i, enemies.length, e.boss); });
+  let list;
+  if (L === 1) list = [['dummy']];
+  else if (L === 2) list = [['turret']];
+  else if (L === 3) list = [['sparring']];
+  else if (L === 4) list = [['spam', { hp: 0.7 }], ['bug', { hp: 0.8 }]];
+  else if (node.type === 'boss') list = [[sec.boss]];
+  else if (node.type === 'elite') list = [[pick(sec.enemies), { hp: 2.2, power: 1.3, interval: 0.85, prefix: '強化' }], [pick(sec.enemies)]];
+  else list = S.run.pos[0] >= 3 || Math.random() < 0.35 ? [[pick(sec.enemies)], [pick(sec.enemies)]] : [[pick(sec.enemies)]];
+  beginBattle({
+    mode: L ? 'tutorial' : 'run', node, sec, list, lesson: L, hpRatio: S.run.hpRatio,
+    title: `${sec.name} ― ${D.NODE_TYPES[node.type].name}`,
+    // レッスン1〜3は、左下の説明と重ならないよう敵を右上に置く
+    slot: L && L < 4 ? { x: 0.74, y: 0.24 } : null,
+  });
+}
 
+// 戦闘の共通の開始処理
+// cfg: { mode: run|tutorial|drill|endless|daily, node, sec, list: [[敵key, 倍率]], lesson, hpRatio, title, slot, extra }
+function beginBattle(cfg) {
+  const L = cfg.lesson || 0;
   const t = team();
+  // 難易度はミッションと特訓だけ。エンドレス・デイリーはランキングを公平にするため「ふつう」固定
+  const diffKey = cfg.mode === 'run' || cfg.mode === 'drill' ? (S.difficulty || 'normal') : 'normal';
   B = {
-    node, sec, enemies, packets: [], shots: [], maxHp: t.hp, hp: Math.max(1, Math.round(t.hp * S.run.hpRatio)), atk: t.atk, def: t.def,
+    mode: cfg.mode, node: cfg.node || { type: 'battle' }, sec: cfg.sec, diffKey, enemies: [], packets: [], shots: [],
+    maxHp: t.hp, hp: Math.max(1, Math.round(t.hp * (cfg.hpRatio === undefined ? 1 : cfg.hpRatio))), atk: t.atk, def: t.def,
     shield: 0, slowUntil: 0, stunUntil: 0, crit: 0, time: 0, last: performance.now(), paused: false, ended: false, ending: false,
-    typer: new MultiTyper(), combo: 0, maxCombo: 0, keys: 0, miss: 0, blocked: 0, seq: 0, w: 800, h: 470, coreR: 88, s: 1,
+    typer: new MultiTyper(), combo: 0, maxCombo: 0, keys: 0, miss: 0, blocked: 0, kills: 0, seq: 0, w: 800, h: 470, coreR: 88, s: 1,
     skills: S.party.map(id => ({ id, cmd: D.CHARS[id].skill.cmd, cd: D.CHARS[id].skill.cd, readyAt: D.CHARS[id].skill.cd * 0.5 })),
     tut: L ? { lesson: L, blocks: 0, hideVuln: L === 2 || L === 3, skillUsed: false, noFire: L === 1 || L === 3, introDone: false } : null,
     freeze: false, // チュートリアルの説明中、敵と弾の時間を止める
-    noLose: !!L, // チュートリアル中は負けない
+    noLose: !!L || cfg.mode === 'drill', // チュートリアルと特訓では負けない
+    slot: cfg.slot || null,
+    ...(cfg.extra || {}),
   };
   // レッスン1・2ではスキルを出さない。レッスン3は1人目のスキルだけ最初から使える
   if (L === 1 || L === 2) B.skills.forEach(s => { s.readyAt = 1e9; });
   if (L === 3) B.skills.forEach((s, i) => { s.readyAt = i === 0 ? 0 : 1e9; });
-  if (L === 2) enemies[0].timer = 1.2;
   show('battle');
   $('#pauseOverlay').classList.add('hidden');
-  $('#btlTitle').textContent = `${sec.name} ― ${D.NODE_TYPES[node.type].name}`;
+  $('#btlTitle').textContent = cfg.title + (diffKey !== 'normal' ? `［${DIFFS[diffKey].name}］` : '');
   // チームは中央のコアを囲む陣形
   const n = S.party.length;
   B.members = S.party.map((id, i) => {
@@ -133,11 +141,6 @@ function startBattle(node) {
   });
   $('#btlParty').innerHTML = B.members.map(m =>
     `<div class="bp-av" id="bm-${m.id}" title="${m.name}" style="left:calc(50% + ${(Math.cos(m.angle) * 58).toFixed(1)}px);top:calc(50% + ${(Math.sin(m.angle) * 58).toFixed(1)}px)">${A.avatar(D.CHARS[m.id])}</div>`).join('');
-  $('#btlEnemies').innerHTML = enemies.map(e => `<div class="enemy ${e.boss ? 'boss' : ''}" id="en${e.idx}" style="left:${e.pos.x * 100}%;top:${e.pos.y * 100}%">
-    <div class="en-art">${A.enemy(e.key, e.def)}</div>
-    <div class="en-name">${e.name}</div>
-    <div class="bar en-hp"><i></i></div>
-    <code class="vuln"></code></div>`).join('');
   $('#skillBar').innerHTML = B.skills.map(s => {
     const c = D.CHARS[s.id];
     return `<div class="skill" id="sk-${s.id}" title="${c.skill.name}：${c.skill.desc}">
@@ -148,14 +151,35 @@ function startBattle(node) {
   $('#fxSvg').innerHTML = '';
   $('#fxLayer').innerHTML = '';
   measure();
-  enemies.forEach(newVuln);
-  if (node.type === 'boss') toast(`◉ ボス <b>${enemies[0].name}</b> が あらわれた！`);
-  refreshLabels();
+  setEnemies(cfg.list);
+  if (B.node.type === 'boss') toast(`◉ ボス <b>${B.enemies[0].name}</b> が あらわれた！`);
+  if (L === 2) B.enemies[0].timer = 1.2;
   if (L) battleGuide();
   const mine = B;
   // 前の戦闘のループが残っていても、この戦闘には干渉しないようにする
   const frame = now => { if (B !== mine || mine.ended) return; loop(now); requestAnimationFrame(frame); };
   requestAnimationFrame(frame);
+}
+
+// 敵を並べる（ウェーブ制のモードでは、ウェーブごとに呼び直す）
+function makeEnemy(key, mul = {}) {
+  const e = D.ENEMIES[key];
+  const hp = Math.round(e.hp * B.sec.hpMul * (mul.hp || 1));
+  return { key, name: (mul.prefix || '') + e.name, def: e, hp, maxHp: hp, power: e.power * (mul.power || 1), pending: 0, side: 1,
+    interval: e.interval * (mul.interval || 1) * DIFFS[B.diffKey].fire, travel: e.travel, pool: e.pool,
+    timer: rand(1.2, 2.6), boss: !!e.boss };
+}
+function setEnemies(list) {
+  B.enemies.forEach(e => B.typer.remove(e.vulnId));
+  B.enemies = list.map(([key, mul], i) => makeEnemy(key, mul));
+  B.enemies.forEach((e, i) => { e.idx = i; e.pos = B.slot || enemySlot(i, B.enemies.length, e.boss); });
+  $('#btlEnemies').innerHTML = B.enemies.map(e => `<div class="enemy ${e.boss ? 'boss' : ''}" id="en${e.idx}" style="left:${e.pos.x * 100}%;top:${e.pos.y * 100}%">
+    <div class="en-art">${A.enemy(e.key, e.def)}</div>
+    <div class="en-name">${e.name}</div>
+    <div class="bar en-hp"><i></i></div>
+    <code class="vuln"></code></div>`).join('');
+  B.enemies.forEach(newVuln);
+  refreshLabels();
 }
 
 // 同時に画面にあるコードは、1文字目がかぶらないようにする（1文字目で狙いが決まる）
@@ -166,6 +190,12 @@ function pickCode(pool) {
 }
 function vulnPool() {
   const tier = B.sec.tier;
+  if (B.diffKey === 'easy') {
+    // やさしい：短いコードを中心に
+    const short = D.VULN[tier].filter(t => t.length <= 12);
+    return short.length >= 8 ? short : D.VULN[Math.max(1, tier - 1)];
+  }
+  if (B.diffKey === 'hard' && Math.random() < 0.35) return D.VULN.hard; // ハード：大文字や記号の多いコード
   const lower = D.VULN[Math.max(1, tier - 1)];
   return Math.random() < 0.3 && tier > 1 ? lower : D.VULN[tier];
 }
@@ -182,7 +212,7 @@ function spawnPacket(e) {
   e.side = -e.side;
   const p = {
     id: 'p' + (++B.seq), text, t: 0, power: e.power, enemy: e,
-    T: e.travel * TRAVEL_MUL * (1 + Math.max(0, text.length - 10) * 0.05),
+    T: e.travel * TRAVEL_MUL * DIFFS[B.diffKey].travel * (1 + Math.max(0, text.length - 10) * 0.05),
     from: e.pos, side: e.side,
     bend: rand(0.25, 0.5),
   };
@@ -329,6 +359,7 @@ function battleKey(ch) {
     return;
   }
   B.keys++; B.combo++; B.maxCombo = Math.max(B.maxCombo, B.combo);
+  B.skills.forEach(s => { s.readyAt -= SKILL_CHARGE_PER_KEY; }); // 正しく打つほど、スキルが早くたまる
   Snd.key();
   if (r.type === 'done') {
     const t = r.target;
@@ -569,8 +600,9 @@ function endBattle(result) {
   if (result === 'win') {
     r.wins++;
     const typeMul = node.type === 'boss' ? 3 : node.type === 'elite' ? 1.8 : 1;
-    const cr = Math.round((30 + B.enemies.length * 12) * sec.reward * typeMul * rand(0.9, 1.1));
-    const exp = Math.round((18 + B.enemies.length * 8) * sec.reward * typeMul);
+    const dm = DIFFS[B.diffKey].reward;
+    const cr = Math.round((30 + B.enemies.length * 12) * sec.reward * typeMul * dm * rand(0.9, 1.1));
+    const exp = Math.round((18 + B.enemies.length * 8) * sec.reward * typeMul * dm);
     S.cr += cr;
     S.party.forEach(id => { if (addExp(id, exp)) ups.push(id); });
     run.hpRatio = clamp(B.hp / B.maxHp, 0.01, 1);

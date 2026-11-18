@@ -106,6 +106,13 @@ window.GameData = (function () {
       'patch --apply fix_12.diff', 'rsync -a /safe /backup'],
   };
 
+  // ハード用：大文字・記号の多いコード（1文字目がかぶらないよう、いろいろな文字で始める）
+  VULN.hard = ['Array.isArray(x)', 'JSON.parse(raw)', 'Math.max(a, b)', 'console.log("OK");', 'IF ERR THEN HALT',
+    'new Shield(Level.MAX)', 'Object.keys(Cfg)', 'API_KEY = null;', 'fw.Block("10.0.0.66")', 'Promise.all(tasks)',
+    'X-Guard: ON', 'git commit -m "FIX"', 'Path("/core").exists()', 'SELECT * FROM logs;', 'DROP TABLE virus;',
+    '#define SAFE 1', 'try { Patch(); }', 'User.Role = "GUEST"', 'Kill(PID_WORM);', 'ENV["MODE"] = "SAFE"',
+    'Lock(Port.HTTPS)', 'Queue.push({id: 7})', 'ZIP_LEVEL = 9;', 'Verify(Sign(Key))', '$HOME/.cache'];
+
   // ---------- 敵 ----------
   // pool: 敵が飛ばす攻撃パケット（打って防ぐ）
   const ENEMIES = {

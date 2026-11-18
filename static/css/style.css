@@ -455,3 +455,16 @@ body[data-tut~="attack"] .vuln, body[data-tut~="defense"] .packet, body[data-tut
   .res-grid { grid-template-columns: repeat(2, 1fr); }
   .ncmd { font-size: 9px; }
 }
+
+/* ---------- 設定・案内 ---------- */
+.set-h { color: var(--cyan); font-size: 14px; margin: 14px 0 8px; }
+.set-h small { font-weight: 400; }
+.diff-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.diff { text-align: left; background: #08122a; border: 1px solid var(--line); border-radius: 4px; padding: 10px; color: var(--ink); }
+.diff b { display: block; color: var(--cyan); }
+.diff small { display: block; font-size: 11px; color: var(--dim); margin-top: 4px; }
+.diff.on { border-color: var(--lime); box-shadow: 0 0 12px rgba(157, 255, 77, .35); }
+.diff.on b { color: var(--lime); }
+.mobile-note { margin: 18px auto 0; max-width: 420px; padding: 10px 14px; border: 1px solid var(--gold); border-radius: 4px;
+  background: rgba(40, 30, 6, .8); color: #ffe7a8; font-size: 13px; line-height: 1.6; }
+@media (max-width: 600px) { .diff-list { grid-template-columns: 1fr; } }

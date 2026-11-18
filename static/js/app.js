@@ -69,6 +69,9 @@ async function init() {
   $('#resetBtn').onclick = async () => {
     if (confirm('ほんとうに データを初期化しますか？（仲間・CR・進行がすべて消えます）')) { await resetSave(); location.reload(); }
   };
+  $('#settingsBtn').onclick = openSettings;
+  // スマホ・タブレット（タッチ操作が中心の端末）で開いたら、キーボードが必要なことを知らせる
+  if (matchMedia('(hover: none) and (pointer: coarse)').matches) $('#mobileNote').hidden = false;
   $('#soundBtn').onclick = () => { if (!S) return; S.sound = !S.sound; save(); updateHud(); };
   $('#pauseBtn').onclick = () => togglePause();
   $('#resumeBtn').onclick = () => togglePause(false);
@@ -78,6 +81,8 @@ async function init() {
     B.ending = true; endBattle('retreat');
   };
   $('#modal').addEventListener('click', e => {
+    const df = e.target.closest('[data-diff]');
+    if (df) { setDifficulty(df.dataset.diff); return; }
     const act = e.target.closest('[data-act]');
     if (act) runModalAction(act.dataset.act);
     else if (e.target.id === 'modal' && modalClosable) closeModal();

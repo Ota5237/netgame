@@ -76,7 +76,7 @@ function battleGuide() {
   } else if (t.lesson === 3 && !t.skillUsed) {
     guide('STEP 4 スキルを使おう', `下の <b class="c-gold">スキル欄</b>が 金色に光ったら 使えるよ。<br><code class="c-gold">${esc(B.skills[0].cmd)}</code> のように <b>/</b> から打つと 発動！`, { tut: 'skill' });
   } else if (t.lesson === 3) {
-    guide('STEP 4 スキル発動！', `スキルは 時間がたつと また使える。弾を ふせぐと 少し早く たまるよ。<br>さあ、<b class="c-cyan">弱点コード</b>や スキルで 倒そう！`, { tut: 'attack skill' });
+    guide('STEP 4 スキル発動！', `スキルは 時間がたつと また使える。<b>正しく打つほど</b>・弾を ふせぐほど 早く たまるよ。<br>さあ、<b class="c-cyan">弱点コード</b>や スキルで 倒そう！`, { tut: 'attack skill' });
   } else {
     guide('STEP 5 卒業テスト', `2体を相手に、攻撃・防御・スキルを 全部使って 勝とう！<br><small class="dim">チュートリアル中は HP が0になっても 負けないよ。Esc で一時停止もできる。</small>`);
   }
