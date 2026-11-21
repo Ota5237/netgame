@@ -113,6 +113,7 @@ const Music = (function () {
     ensure, play, stop, applyVolume,
     get se() { ensure(); return seGain; },
     get ctx() { return ensure(); },
+    get noise() { ensure(); return noise; },
     get track() { return trackName; },
     get state() { return ctx ? ctx.state : 'none'; },
   };

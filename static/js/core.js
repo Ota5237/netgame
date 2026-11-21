@@ -108,6 +108,91 @@ const Snd = {
     const n = { N: 1, R: 2, SR: 3, SSR: 5 }[r];
     for (let i = 0; i < n; i++) this.tone(880 * Math.pow(1.26, i), 0.14, 'triangle', 0.035, i * 0.06);
   },
+
+  // ---- 演出用の部品 ----
+  // 音の高さが f0 → f1 に変わる音（うなり・サイレンなど）
+  sweep(f0, f1, d, type = 'sawtooth', v = 0.03, when = 0) {
+    if (S && !S.sound) return;
+    try {
+      const ctx = Music.ctx;
+      if (!ctx) return;
+      const t = ctx.currentTime + when;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + d);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + d * 0.2); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      o.connect(g).connect(Music.se); o.start(t); o.stop(t + d + 0.02);
+    } catch (e) { }
+  },
+  // ノイズ（ザーッ・シュッという音）。f1 を指定すると、こもり方が変わっていく
+  noise(d, v = 0.05, when = 0, type = 'bandpass', f0 = 1200, f1 = null) {
+    if (S && !S.sound) return;
+    try {
+      const ctx = Music.ctx;
+      if (!ctx || !Music.noise) return;
+      const t = ctx.currentTime + when;
+      const src = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
+      src.buffer = Music.noise; src.loop = true;
+      fl.type = type; fl.frequency.setValueAtTime(f0, t);
+      if (f1) fl.frequency.exponentialRampToValueAtTime(f1, t + d);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + Math.min(0.05, d * 0.3)); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      src.connect(fl).connect(g).connect(Music.se); src.start(t); src.stop(t + d + 0.02);
+    } catch (e) { }
+  },
+
+  // ---- オープニング・エンディングの場面ごとの効果音（画面の動きのタイミングに合わせる） ----
+  scene(name) {
+    switch (name) {
+      case 'city': {
+        // ビルが 0.17 秒ずつ順に建つ → ビルごとに高くなっていく音＋全体のうなり
+        this.sweep(110, 440, 1.8, 'sawtooth', 0.02);
+        this.noise(1.6, 0.025, 0, 'bandpass', 300, 2400);
+        const notes = [523, 587, 659, 784, 880, 1047, 1175, 1319, 1568, 1760, 2093];
+        notes.forEach((f, i) => this.tone(f, 0.12, 'triangle', 0.03, 0.3 + i * 0.17));
+        break;
+      }
+      case 'alert':
+        // 警報サイレン（赤い点滅に合わせて）＋グリッチ音
+        for (let k = 0; k < 4; k++) {
+          this.sweep(620, 980, 0.3, 'square', 0.028, k * 0.6);
+          this.sweep(980, 620, 0.3, 'square', 0.028, k * 0.6 + 0.3);
+        }
+        for (let k = 0; k < 7; k++) {
+          const w = 0.12 + k * 0.33 + Math.random() * 0.08;
+          this.noise(0.05, 0.07, w, 'highpass', 2500);
+          this.tone(70 + Math.random() * 120, 0.06, 'square', 0.05, w);
+        }
+        break;
+      case 'term':
+        // 端末の起動音＋データ通信のさえずり
+        this.sweep(80, 1200, 0.25, 'square', 0.025);
+        this.tone(1320, 0.08, 'square', 0.03, 0.3); this.tone(1760, 0.12, 'square', 0.03, 0.4);
+        for (let k = 0; k < 12; k++) this.tone(1200 + Math.random() * 1200, 0.025, 'square', 0.012, 0.6 + k * 0.05);
+        break;
+      case 'team':
+        // 仲間が 0.18 秒ずつ順に降りてくる → 1人ごとに着地音とチャイム
+        [784, 988, 1175, 1319, 1568].forEach((f, i) => {
+          const w = 0.32 + i * 0.18;
+          this.tone(f, 0.28, 'triangle', 0.04, w);
+          this.tone(90, 0.14, 'sine', 0.07, w);
+        });
+        this.sweep(1500, 3000, 0.5, 'sine', 0.015, 1.35);
+        break;
+      case 'term2':
+        this.tone(1320, 0.06, 'square', 0.03); this.tone(1760, 0.1, 'square', 0.03, 0.1);
+        break;
+      case 'restore':
+        // システム復旧：上がっていく音のあとに明るい和音
+        this.sweep(150, 900, 1.2, 'triangle', 0.04);
+        [523, 659, 784, 1047].forEach(f => this.tone(f, 0.9, 'triangle', 0.03, 1.05));
+        break;
+      case 'thanks':
+        // ファンファーレ
+        [[523, 0], [659, 0.12], [784, 0.24], [1047, 0.36], [784, 0.6], [1047, 0.72]].forEach(([f, w]) => this.tone(f, 0.25, 'square', 0.03, w));
+        [523, 659, 784, 1047].forEach(f => this.tone(f, 1.2, 'triangle', 0.03, 0.96));
+        break;
+    }
+  },
 };
 
 // =========================================================

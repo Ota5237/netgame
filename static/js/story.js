@@ -57,7 +57,10 @@ function startStory(replay, lines = STORY, onEnd = null) {
 }
 function playScene() {
   const sc = story.lines[story.i], prev = story.lines[story.i - 1];
-  if (!prev || prev.scene !== sc.scene) $('#storyStage').innerHTML = sceneHTML(sc.scene);
+  if (!prev || prev.scene !== sc.scene) {
+    $('#storyStage').innerHTML = sceneHTML(sc.scene);
+    Snd.scene(sc.scene); // 場面の動きに合わせた効果音
+  }
   const el = $('#storyText');
   el.textContent = '';
   $('#storyNext').classList.remove('show');
