@@ -512,3 +512,22 @@ body[data-tut~="attack"] .vuln, body[data-tut~="defense"] .packet, body[data-tut
 .vol { display: grid; grid-template-columns: 110px 1fr 40px; align-items: center; gap: 10px; margin: 8px 0; }
 .vol input { width: 100%; accent-color: var(--cyan); }
 .vol b { text-align: right; color: var(--cyan); }
+
+/* ---------- キーボード操作 ---------- */
+:focus-visible, [data-nav]:focus { outline: 2px solid var(--gold); outline-offset: 3px; box-shadow: 0 0 16px rgba(255, 209, 102, .5); }
+.acard[data-nav]:focus { transform: translateY(-2px); }
+kbd { display: inline-block; min-width: 18px; padding: 0 5px; margin: 0 2px; font-family: var(--mono); font-size: 11px; font-weight: 700; line-height: 17px;
+  text-align: center; color: #fff; background: #1a2a4f; border: 1px solid #3a5288; border-bottom-width: 2px; border-radius: 3px; vertical-align: middle; }
+.btn.primary kbd { background: rgba(3, 16, 24, .35); border-color: rgba(3, 16, 24, .5); }
+.key-hint { position: fixed; left: 0; right: 0; bottom: 0; z-index: 8; padding: 5px 14px; font-size: 12px; color: var(--dim);
+  background: rgba(4, 9, 20, .92); border-top: 1px solid var(--line); text-align: center; }
+.key-hint[hidden] { display: none; }
+body[data-screen="hub"] #app, body[data-screen="party"] #app, body[data-screen="gacha"] #app, body[data-screen="map"] #app { padding-bottom: 44px; }
+.diff-badge { color: var(--gold) !important; margin-left: 10px; }
+.toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; text-align: left; padding: 10px 12px;
+  background: #08122a; border: 1px solid var(--line); border-radius: 4px; color: var(--ink); }
+.toggle b { display: block; color: var(--cyan); }
+.toggle small { display: block; font-size: 11px; color: var(--dim); margin-top: 3px; }
+.toggle .tg { flex: none; min-width: 48px; text-align: center; padding: 3px 8px; border-radius: 99px; font-weight: 700; background: #1a2440; color: var(--dim); }
+.toggle.on { border-color: var(--lime); }
+.toggle.on .tg { background: var(--lime); color: #071; }

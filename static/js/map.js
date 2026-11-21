@@ -82,7 +82,7 @@ function renderMap(rebuild) {
 
   if (rebuild || !MT) {
     MT = new MultiTyper();
-    cur.next.forEach(k => { const n = cols[pc + 1][k]; MT.add(`n${k}`, sec.cmd(n.id), 'node', { c: pc + 1, k }); });
+    cur.next.forEach(k => { const n = cols[pc + 1][k]; MT.add(`n${k}`, nodeCmd(sec, n.id), 'node', { c: pc + 1, k }); });
     MT.add('exit', 'exit', 'exit');
   }
 

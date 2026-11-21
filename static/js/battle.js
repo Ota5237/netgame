@@ -191,7 +191,7 @@ function setEnemies(list) {
 // 同時に画面にあるコードは、1文字目がかぶらないようにする（1文字目で狙いが決まる）
 function pickCode(pool) {
   const used = B.typer.usedFirstChars();
-  const ok = pool.filter(t => !used.has(t[0]) && t[0] !== '/');
+  const ok = spaceFilter(pool).filter(t => !used.has(t[0]) && t[0] !== '/');
   return ok.length ? pick(ok) : null;
 }
 function vulnPool() {
@@ -594,6 +594,8 @@ function togglePause(force) {
   if (!B || B.ended || B.ending) return;
   B.paused = force !== undefined ? force : !B.paused;
   $('#pauseOverlay').classList.toggle('hidden', !B.paused);
+  if (B.paused) setTimeout(() => $('#resumeBtn').focus(), 30); // ↑↓ と Enter で選べるように
+  else if (document.activeElement) document.activeElement.blur();
 }
 
 function endBattle(result) {

@@ -12,13 +12,13 @@ function drillPool(keys) {
   const base = new Set();
   for (let t = 1; t <= tierMax; t++) D.VULN[t].forEach(x => base.add(x));
   if (S.difficulty === 'hard') D.VULN.hard.forEach(x => base.add(x));
-  const list = [...base];
+  const list = spaceFilter([...base]);
   if (!keys.length) return list;
   // 苦手なキーは、まだ行っていないセクターのコードからも探す（記号などは後半のコードに多いため）
   const all = new Set(list);
   [1, 2, 3, 'hard'].forEach(t => D.VULN[t].forEach(x => all.add(x)));
   const score = t => { let n = 0; for (const ch of t) if (keys.includes(ch)) n++; return n / Math.sqrt(t.length); };
-  const scored = [...all].map(t => [t, score(t)]).filter(x => x[1] > 0);
+  const scored = spaceFilter([...all]).map(t => [t, score(t)]).filter(x => x[1] > 0);
   // キーごとに偏らないよう、それぞれのキーを含むコードを順番に取り出す
   const picked = [];
   for (let round = 0; picked.length < 40 && round < 20; round++) {

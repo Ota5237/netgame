@@ -49,7 +49,7 @@ function mapGuide() {
   const run = S.run, [c] = run.pos;
   const next = run.cols[c + 1] && run.cols[c + 1][0];
   if (!next) return;
-  const cmd = `<code class="c-gold">${esc(D.TUTORIAL.cmd(next.id))}</code>`;
+  const cmd = `<code class="c-gold">${esc(nodeCmd(D.TUTORIAL, next.id))}</code>`;
   const steps = [
     ['STEP 1 マップを進もう', `ここは 練習用の《トレーニング・サーバー》。<br>マップでは、行き先ノードの <b>コマンド</b>を打つと 移動できるよ。<br>まずは ${cmd} と打ってみよう！`],
     ['NEXT ▶ 防御の練習', `ナイス！ 攻撃は バッチリだね。<br>次は 敵の攻撃を ふせぐ練習。${cmd} で進もう。`],

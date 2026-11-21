@@ -106,12 +106,22 @@ window.GameData = (function () {
       'patch --apply fix_12.diff', 'rsync -a /safe /backup'],
   };
 
+  // スペースなしモード用に、スペースを含まないコードを足す（1文字目がいろいろになるように）
+  VULN[2].push('fw.allow(443)', 'hash.check(f)', 'tmp.purge()', 'user.logout()', 'ssl.renew()', 'key.rotate()',
+    'acl.deny(66)', 'dns.flush()', 'port.close(23)', 'mail.scan()', 'vault.lock()', 'quota.set(5)', 'blocklist.add(ip)', 'zap.cache()');
+  VULN[3].push('sandbox.run(file);', 'cert.verify(chain);', 'ids.alert("bot");', 'mfa.require(user);', 'rule.add({drop:true})',
+    'audit.log(event);', 'zone.isolate(lan_2);', 'token.revoke(sess);', 'kernel.patch(v=6);', 'firewall.reload();',
+    'packet.inspect(deep);', 'ufw.deny(port=66)', 'vpn.tunnel(on=1);', 'heap.guard(0x7f);', 'quarantine(trojan);', 'yara.scan(dir);',
+    'backup.restore(last);', 'nodes.forEach(scan);', 'otp.verify(code);', 'gc.collect();', 'json.validate(cfg);', 'lock.acquire();');
+
   // ハード用：大文字・記号の多いコード（1文字目がかぶらないよう、いろいろな文字で始める）
   VULN.hard = ['Array.isArray(x)', 'JSON.parse(raw)', 'Math.max(a, b)', 'console.log("OK");', 'IF ERR THEN HALT',
     'new Shield(Level.MAX)', 'Object.keys(Cfg)', 'API_KEY = null;', 'fw.Block("10.0.0.66")', 'Promise.all(tasks)',
     'X-Guard: ON', 'git commit -m "FIX"', 'Path("/core").exists()', 'SELECT * FROM logs;', 'DROP TABLE virus;',
     '#define SAFE 1', 'try { Patch(); }', 'User.Role = "GUEST"', 'Kill(PID_WORM);', 'ENV["MODE"] = "SAFE"',
     'Lock(Port.HTTPS)', 'Queue.push({id: 7})', 'ZIP_LEVEL = 9;', 'Verify(Sign(Key))', '$HOME/.cache'];
+  VULN.hard.push('Auth.Login(USER)', 'Cache.Clear(ALL)', 'Dns.Resolve(HOST)', 'Http.Get(URL)', 'NaN!==NaN', 'Redis.FlushAll()',
+    'Uint8Array(16)', 'Base64.Decode(S)', 'Mutex.Lock()', 'Hex(0xFF)', 'Regex(/^OK$/)', 'XOR(A,B)');
 
   // ---------- 敵 ----------
   // pool: 敵が飛ばす攻撃パケット（打って防ぐ）
@@ -163,18 +173,18 @@ window.GameData = (function () {
 
   const SECTORS = [
     { id: 1, name: 'データの森', en: 'DATA FOREST', desc: 'データの木々が生いしげる、ネオグリッドの入口。', theme: 'forest',
-      cmd: id => `cd /forest/${id}`, enemies: ['spam', 'worm', 'bug'], boss: 'trojan', tier: 1, hpMul: 1.8, dmgMul: 1, reward: 1, fireMul: 1, travelMul: 1 },
+      cmd: (id, ns) => (ns ? `cd(/forest/${id})` : `cd /forest/${id}`), enemies: ['spam', 'worm', 'bug'], boss: 'trojan', tier: 1, hpMul: 1.8, dmgMul: 1, reward: 1, fireMul: 1, travelMul: 1 },
     { id: 2, name: 'ファイアウォール山脈', en: 'FIREWALL RIDGE', desc: '燃えるファイアウォールがそびえる山岳地帯。', theme: 'ridge',
-      cmd: id => `ssh fw-${id}`, enemies: ['adware', 'keylog', 'botnet'], boss: 'ransom', tier: 2, hpMul: 1.8, dmgMul: 1.4, reward: 2, fireMul: 0.8, travelMul: 0.9 },
+      cmd: (id, ns) => (ns ? `ssh(fw-${id})` : `ssh fw-${id}`), enemies: ['adware', 'keylog', 'botnet'], boss: 'ransom', tier: 2, hpMul: 1.8, dmgMul: 1.4, reward: 2, fireMul: 0.8, travelMul: 0.9 },
     { id: 3, name: '深層ネット海溝', en: 'DEEP NET TRENCH', desc: '光のとどかない、データの深海。', theme: 'trench',
-      cmd: id => `dive --to ${id}`, enemies: ['rootkit', 'phantom', 'zeroday'], boss: 'chaos', tier: 3, hpMul: 1.8, dmgMul: 1.7, reward: 3, fireMul: 0.65, travelMul: 0.82 },
+      cmd: (id, ns) => (ns ? `dive(${id})` : `dive --to ${id}`), enemies: ['rootkit', 'phantom', 'zeroday'], boss: 'chaos', tier: 3, hpMul: 1.8, dmgMul: 1.7, reward: 3, fireMul: 0.65, travelMul: 0.82 },
     { id: 4, name: 'コアサーバー', en: 'CORE SERVER', desc: 'ネオグリッドの心臓部。すべての元凶がいる。', theme: 'core',
       cmd: id => `connect("${id}")`, enemies: ['glitch', 'daemon', 'mirror'], boss: 'omega', tier: 3, hpMul: 2.3, dmgMul: 1.9, reward: 4, fireMul: 0.6, travelMul: 0.75 },
   ];
 
   // チュートリアル専用ステージ（拠点のセクター一覧には出さない）
   const TUTORIAL = { id: 0, name: 'トレーニング・サーバー', en: 'TRAINING SERVER', desc: '基本を練習するための安全なサーバー。', theme: 'training',
-    cmd: id => `cd /training/${id}`, enemies: ['spam', 'bug'], boss: 'spam', tier: 1, hpMul: 1, dmgMul: 1, reward: 0 };
+    cmd: (id, ns) => (ns ? `cd(/training/${id})` : `cd /training/${id}`), enemies: ['spam', 'bug'], boss: 'spam', tier: 1, hpMul: 1, dmgMul: 1, reward: 0 };
 
   const NODE_TYPES = {
     lesson: { icon: '✎', name: 'レッスン' },

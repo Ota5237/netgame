@@ -7,8 +7,15 @@
 function onKeyDown(e) {
   const scr = document.body.dataset.screen;
   if (modalOpen()) {
-    if (e.key === 'Enter' && modalAction !== undefined) { e.preventDefault(); runModalAction(); }
-    else if (e.key === 'Escape' && modalClosable) closeModal();
+    // 難易度の選択：数字キー 1〜3 でそのまま決定
+    const picks = document.querySelectorAll('#modal [data-pick]');
+    if (picks.length && /^[1-9]$/.test(e.key) && picks[+e.key - 1]) { e.preventDefault(); picks[+e.key - 1].click(); return; }
+    if (navKey(e)) return;
+    if (e.key === 'Enter') {
+      const el = document.activeElement;
+      if (el && el.tagName === 'BUTTON' && el.closest('#modal')) return; // 選んでいるボタンを押す（ブラウザ標準の動き）
+      e.preventDefault(); runModalAction();
+    } else if (e.key === 'Escape' && modalClosable) closeModal();
     return;
   }
   if (scr === 'title' || scr === 'story') {
@@ -20,10 +27,16 @@ function onKeyDown(e) {
     return;
   }
   if (scr === 'gacha' && gachaSkip && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); gachaSkip(); return; }
+  if (MENU_SCREENS.includes(scr)) { menuKey(e); return; }
   if (scr !== 'map' && scr !== 'battle') return;
   if (scr === 'battle') {
     if (e.key === 'Escape') { togglePause(); return; }
-    if (!B || B.paused || B.ended) return;
+    if (B && B.paused) { navKey(e); return; } // 一時停止中は ↑↓ と Enter で「再開／撤退」を選ぶ
+    if (!B || B.ended) return;
+  }
+  if (scr === 'map' && e.key === 'Escape') {
+    e.preventDefault(); save(true); showHub(); toast('拠点に戻った。進行は保存されています。');
+    return;
   }
   const warn = document.querySelector(`#screen-${scr} .ime-warn`);
   if (e.key === 'Process' || e.isComposing) { warn.classList.add('show'); return; }
@@ -54,14 +67,15 @@ async function init() {
 
   $('#sectorList').addEventListener('click', e => {
     if (e.target.closest('[data-tutorial]')) { startTutorial(); return; }
-    if (e.target.closest('[data-drill]')) { startDrill(); return; }
+    if (e.target.closest('[data-drill]')) { chooseDifficulty(startDrill, '苦手キー特訓'); return; }
     const rk = e.target.closest('[data-ranking]');
     if (rk) { openRanking(rk.dataset.ranking); return; }
     const en = e.target.closest('[data-endless]');
     if (en && !en.disabled) { startEndless(); return; }
     const dl = e.target.closest('[data-daily]');
     if (dl && !dl.disabled) { startDaily(); return; }
-    const b = e.target.closest('[data-sector]'); if (b && !b.disabled) startRun(+b.dataset.sector);
+    const b = e.target.closest('[data-sector]');
+    if (b && !b.disabled) chooseDifficulty(() => startRun(+b.dataset.sector), `SECTOR ${b.dataset.sector}「${sectorOf(+b.dataset.sector).name}」`);
   });
   $('#guideClose').onclick = hideGuide;
   $('#editPartyBtn').onclick = showParty;
@@ -92,6 +106,10 @@ async function init() {
     if (e.target.closest('[data-submit]')) { submitScore(); return; }
     const df = e.target.closest('[data-diff]');
     if (df) { setDifficulty(df.dataset.diff); return; }
+    const pk = e.target.closest('[data-pick]');
+    if (pk) { pickDifficulty(pk.dataset.pick); return; }
+    const tg = e.target.closest('[data-toggle]');
+    if (tg) { toggleSetting(tg.dataset.toggle); return; }
     const act = e.target.closest('[data-act]');
     if (act) runModalAction(act.dataset.act);
     else if (e.target.id === 'modal' && modalClosable) closeModal();

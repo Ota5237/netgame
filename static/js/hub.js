@@ -59,6 +59,7 @@ function renderHub() {
   $('#hubTeamStats').innerHTML = teamStatsHTML();
 
   $('#endingBtn').hidden = !S.story.ending;
+  $('#diffBadge').textContent = `難易度：${DIFFS[S.difficulty || 'normal'].name}${noSpace() ? ' ・ スペースなし' : ''}`;
   const r = S.rec;
   $('#recordBox').innerHTML = [
     ['クリア済みセクター', `${S.cleared} / ${D.SECTORS.length}`], ['勝利 / 戦闘', `${r.wins} / ${r.battles}`],
@@ -94,6 +95,7 @@ function renderParty() {
   const ids = Object.keys(S.owned).sort((a, b) =>
     D.RARITY[D.CHARS[b].rarity].order - D.RARITY[D.CHARS[a].rarity].order || S.owned[b].lv - S.owned[a].lv);
   $('#ownedCount').textContent = `${ids.length} / ${Object.keys(D.CHARS).length}`;
+  setTimeout(() => document.querySelectorAll('#partySlots .acard[data-id], #ownedList .acard').forEach(el => { el.tabIndex = 0; el.dataset.nav = ''; }));
   $('#ownedList').innerHTML = ids.map(id => card(id, {
     cls: S.party.includes(id) ? 'in-party' : '',
     badge: S.party.includes(id) ? '<span class="badge">TEAM</span>' : '',
@@ -101,6 +103,12 @@ function renderParty() {
   updateHud();
 }
 function toggleMember(id) {
+  // 選び直したあとも、同じカードにフォーカスを戻す
+  const inSlot = !!(document.activeElement && document.activeElement.closest && document.activeElement.closest('#partySlots'));
+  setTimeout(() => {
+    const el = document.querySelector(`${inSlot ? '#partySlots' : '#ownedList'} .acard[data-id="${id}"]`) || document.querySelector(`.acard[data-id="${id}"]`);
+    if (el && document.body.dataset.screen === 'party') el.focus({ preventScroll: true });
+  }, 20);
   const i = S.party.indexOf(id);
   if (i >= 0) {
     if (S.party.length <= 1) { toast('チームには 最低1人 必要です'); return; }

@@ -118,6 +118,9 @@ function show(id) {
   document.body.dataset.screen = id;
   document.querySelectorAll('.ime-warn').forEach(e => e.classList.remove('show'));
   hideGuide();
+  // 隠れた画面のボタンにフォーカスが残らないようにする（Enter で押されてしまうのを防ぐ）
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+  if (typeof updateKeyHint === 'function') updateKeyHint();
   // 曲の切り替え（ブラウザの制限で、実際に音が出るのは最初のキー操作のあとから）
   if (id !== 'battle') Music.play(musicFor(id));
 }
@@ -133,6 +136,7 @@ let modalAction = null, modalActions = null, modalClosable = true, modalReadyAt 
 function modal(html, { action = null, actions = null, closable = true, delay = 0 } = {}) {
   $('#modalBody').innerHTML = html;
   $('#modal').classList.remove('hidden');
+  if (typeof focusDefault === 'function') focusDefault($('#modal .modal-box')); // キーボードで すぐ選べるように
   modalAction = action; modalActions = actions; modalClosable = closable; modalReadyAt = Date.now() + delay;
 }
 function closeModal() { $('#modal').classList.add('hidden'); modalAction = null; modalActions = null; }
@@ -203,6 +207,8 @@ function openSettings() {
     <div class="diff-list">${Object.entries(DIFFS).map(([k, d]) => `
       <button class="diff ${k === cur ? 'on' : ''}" data-diff="${k}"><b>${d.name}</b><small>${d.desc}</small></button>`).join('')}
     </div>
+    <h3 class="set-h">入力</h3>
+    ${toggleRow('noSpace', 'コードに スペースを使わない', 'ON：スペースを含むコードは出ない（マップのコマンドも cd(/forest/a1) のような形）')}
     <div id="settingsExtra"></div>
     <button class="btn primary" data-act>閉じる（Enter）</button>`, { action: null });
   if (typeof renderSoundSettings === 'function') renderSoundSettings();
@@ -228,6 +234,7 @@ function migrate(s) {
   s.rec.endlessWave = s.rec.endlessWave || 0;
   s.daily = s.daily || {};
   s.story = s.story || {};
+  if (typeof s.noSpace !== 'boolean') s.noSpace = true;
   if (typeof s.bgmVol !== 'number') s.bgmVol = 0.45;
   if (typeof s.seVol !== 'number') s.seVol = 0.8;
   return s;
@@ -268,3 +275,48 @@ function growthChart() {
     <p class="small dim">さいきん ${h.length} 回 ： 打鍵/分 <b class="c-cyan">${last.k}</b>（${diff >= 0 ? '<span class="c-lime">+' + diff : '<span class="c-red">' + diff}</span>）・ 正確率 <b class="c-lime">${last.a}%</b></p>`;
 }
 const keycap = k => `<span class="kc">${esc(keyLabel(k))}</span>`;
+
+// =========================================================
+// スペースなしモード・オン／オフ設定・出撃前の難易度選択
+// =========================================================
+const noSpace = () => !S || S.noSpace !== false;
+// マップの移動コマンド（スペースなしモードでは cd(/forest/a1) のような形）
+const nodeCmd = (sec, id) => sec.cmd(id, noSpace());
+// 出てくるコードを、スペースなしモードに合わせて絞る
+function spaceFilter(pool) {
+  if (!noSpace()) return pool;
+  const ok = pool.filter(t => !t.includes(' '));
+  return ok.length ? ok : pool.map(t => t.replace(/ /g, ''));
+}
+function toggleRow(key, label, desc) {
+  const on = !!S[key];
+  return `<button class="toggle ${on ? 'on' : ''}" data-toggle="${key}"><span><b>${label}</b><small>${desc}</small></span><span class="tg">${on ? 'ON' : 'OFF'}</span></button>`;
+}
+function toggleSetting(key) {
+  S[key] = !S[key];
+  save();
+  const b = document.querySelector(`[data-toggle="${key}"]`);
+  if (b) { b.classList.toggle('on', S[key]); b.querySelector('.tg').textContent = S[key] ? 'ON' : 'OFF'; }
+  if (document.body.dataset.screen === 'map') renderMap(true);
+  if (document.body.dataset.screen === 'hub') renderHub();
+}
+
+let pendingGo = null;
+function chooseDifficulty(go, title) {
+  const cur = S.difficulty || 'normal';
+  pendingGo = go;
+  modal(`<h2>難易度を選んで出撃</h2>
+    <p class="dim">${esc(title)}</p>
+    <div class="diff-list">${Object.entries(DIFFS).map(([k, d], i) => `
+      <button class="diff ${k === cur ? 'on' : ''}" data-pick="${k}"><b><kbd>${i + 1}</kbd> ${d.name}</b><small>${d.desc}</small></button>`).join('')}
+    </div>
+    <p class="dim small center">←→ で選んで Enter ／ 数字キー 1〜3 でそのまま出撃 ／ Esc でやめる</p>`, { action: null, closable: true });
+}
+function pickDifficulty(k) {
+  S.difficulty = k;
+  save();
+  const go = pendingGo;
+  pendingGo = null;
+  closeModal();
+  if (go) go();
+}
