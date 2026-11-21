@@ -173,18 +173,18 @@ window.GameData = (function () {
 
   const SECTORS = [
     { id: 1, name: 'データの森', en: 'DATA FOREST', desc: 'データの木々が生いしげる、ネオグリッドの入口。', theme: 'forest',
-      cmd: (id, ns) => (ns ? `cd(/forest/${id})` : `cd /forest/${id}`), enemies: ['spam', 'worm', 'bug'], boss: 'trojan', tier: 1, hpMul: 1.8, dmgMul: 1, reward: 1, fireMul: 1, travelMul: 1 },
+      cmd: (id, ns) => (ns ? `cd/forest/${id}` : `cd /forest/${id}`), enemies: ['spam', 'worm', 'bug'], boss: 'trojan', tier: 1, hpMul: 1.8, dmgMul: 1, reward: 1, fireMul: 1, travelMul: 1 },
     { id: 2, name: 'ファイアウォール山脈', en: 'FIREWALL RIDGE', desc: '燃えるファイアウォールがそびえる山岳地帯。', theme: 'ridge',
-      cmd: (id, ns) => (ns ? `ssh(fw-${id})` : `ssh fw-${id}`), enemies: ['adware', 'keylog', 'botnet'], boss: 'ransom', tier: 2, hpMul: 1.8, dmgMul: 1.4, reward: 2, fireMul: 0.8, travelMul: 0.9 },
+      cmd: (id, ns) => (ns ? `ssh/fw-${id}` : `ssh fw-${id}`), enemies: ['adware', 'keylog', 'botnet'], boss: 'ransom', tier: 2, hpMul: 1.8, dmgMul: 1.4, reward: 2, fireMul: 0.8, travelMul: 0.9 },
     { id: 3, name: '深層ネット海溝', en: 'DEEP NET TRENCH', desc: '光のとどかない、データの深海。', theme: 'trench',
-      cmd: (id, ns) => (ns ? `dive(${id})` : `dive --to ${id}`), enemies: ['rootkit', 'phantom', 'zeroday'], boss: 'chaos', tier: 3, hpMul: 1.8, dmgMul: 1.7, reward: 3, fireMul: 0.65, travelMul: 0.82 },
+      cmd: (id, ns) => (ns ? `dive/${id}` : `dive --to ${id}`), enemies: ['rootkit', 'phantom', 'zeroday'], boss: 'chaos', tier: 3, hpMul: 1.8, dmgMul: 1.7, reward: 3, fireMul: 0.65, travelMul: 0.82 },
     { id: 4, name: 'コアサーバー', en: 'CORE SERVER', desc: 'ネオグリッドの心臓部。すべての元凶がいる。', theme: 'core',
-      cmd: id => `connect("${id}")`, enemies: ['glitch', 'daemon', 'mirror'], boss: 'omega', tier: 3, hpMul: 2.3, dmgMul: 1.9, reward: 4, fireMul: 0.6, travelMul: 0.75 },
+      cmd: (id, ns) => (ns ? `connect/${id}` : `connect ${id}`), enemies: ['glitch', 'daemon', 'mirror'], boss: 'omega', tier: 3, hpMul: 2.3, dmgMul: 1.9, reward: 4, fireMul: 0.6, travelMul: 0.75 },
   ];
 
   // チュートリアル専用ステージ（拠点のセクター一覧には出さない）
   const TUTORIAL = { id: 0, name: 'トレーニング・サーバー', en: 'TRAINING SERVER', desc: '基本を練習するための安全なサーバー。', theme: 'training',
-    cmd: (id, ns) => (ns ? `cd(/training/${id})` : `cd /training/${id}`), enemies: ['spam', 'bug'], boss: 'spam', tier: 1, hpMul: 1, dmgMul: 1, reward: 0 };
+    cmd: (id, ns) => (ns ? `cd/training/${id}` : `cd /training/${id}`), enemies: ['spam', 'bug'], boss: 'spam', tier: 1, hpMul: 1, dmgMul: 1, reward: 0 };
 
   const NODE_TYPES = {
     lesson: { icon: '✎', name: 'レッスン' },

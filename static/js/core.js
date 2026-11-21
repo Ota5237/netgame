@@ -293,7 +293,7 @@ function openSettings() {
       <button class="diff ${k === cur ? 'on' : ''}" data-diff="${k}"><b>${d.name}</b><small>${d.desc}</small></button>`).join('')}
     </div>
     <h3 class="set-h">入力</h3>
-    ${toggleRow('noSpace', 'コードに スペースを使わない', 'ON：スペースを含むコードは出ない（マップのコマンドも cd(/forest/a1) のような形）')}
+    ${toggleRow('noSpace', 'コードに スペースを使わない', 'ON：スペースを含むコードは出ない（マップのコマンドも cd/forest/a1 のような形）')}
     <div id="settingsExtra"></div>
     <button class="btn primary" data-act>閉じる（Enter）</button>`, { action: null });
   if (typeof renderSoundSettings === 'function') renderSoundSettings();
@@ -365,7 +365,7 @@ const keycap = k => `<span class="kc">${esc(keyLabel(k))}</span>`;
 // スペースなしモード・オン／オフ設定・出撃前の難易度選択
 // =========================================================
 const noSpace = () => !S || S.noSpace !== false;
-// マップの移動コマンド（スペースなしモードでは cd(/forest/a1) のような形）
+// マップの移動コマンド（スペースなしモードでは cd/forest/a1 のように / で区切るだけ）
 const nodeCmd = (sec, id) => sec.cmd(id, noSpace());
 // 出てくるコードを、スペースなしモードに合わせて絞る
 function spaceFilter(pool) {
