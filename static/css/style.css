@@ -399,9 +399,18 @@ body[data-screen="battle"] .top { display: none; }
   padding: 12px 14px; background: rgba(4, 12, 30, .95); border: 1px solid var(--gold); border-radius: 6px;
   box-shadow: 0 0 24px rgba(255, 209, 102, .3); pointer-events: none; }
 .guide.hidden { display: none; }
-.guide.tr { top: 108px; right: 24px; }
-.guide.br { bottom: 24px; right: 24px; }
-.guide.in-arena { position: absolute; left: 12px; bottom: 12px; width: min(400px, 46%); z-index: 6; }
+.guide.br { bottom: 48px; right: 24px; width: min(540px, calc(100% - 32px)); padding: 16px 18px; }
+.guide.br .g-text { font-size: 17px; }
+/* 戦闘・マップの上に置く、大きな案内 */
+.guide.dock { position: static; width: auto; gap: 16px; align-items: center; padding: 14px 20px; border-width: 2px;
+  background: linear-gradient(90deg, rgba(40, 30, 6, .95), rgba(4, 12, 30, .95) 60%); }
+.guide.dock .g-av { width: 84px; }
+.guide.dock .g-av svg { width: 84px; height: 84px; }
+.guide.dock .g-title { font-size: 16px; margin-bottom: 6px; }
+.guide.dock .g-text { font-size: clamp(16px, 1.55vw, 20px); line-height: 1.75; }
+.guide.dock .g-text small { font-size: .78em; }
+.guide.dock code, .guide.br code { font-size: 1.05em; padding: 1px 6px; background: rgba(255, 209, 102, .12); border-radius: 3px; }
+#screen-map .guide.dock { margin-bottom: 10px; }
 .guide.pop { animation: guidePop .35s ease; }
 @keyframes guidePop { from { opacity: 0; transform: translateY(8px); } }
 .g-av { width: 54px; flex: none; }
@@ -531,3 +540,5 @@ body[data-screen="hub"] #app, body[data-screen="party"] #app, body[data-screen="
 .toggle .tg { flex: none; min-width: 48px; text-align: center; padding: 3px 8px; border-radius: 99px; font-weight: 700; background: #1a2440; color: var(--dim); }
 .toggle.on { border-color: var(--lime); }
 .toggle.on .tg { background: var(--lime); color: #071; }
+/* マップで案内を出しているときは、入力欄が画面に収まるようマップを短くする */
+#screen-map .guide.dock ~ #mapArea { height: max(220px, calc(100vh - 560px)); }

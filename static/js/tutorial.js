@@ -7,11 +7,14 @@
 // =========================================================
 const NAVI = { role: 'scanner', look: { g: 'f', back: 'bob', bangs: 'side', hc: '#3df5ff', eye: '#ff3d9a', skin: 0, acc: ['headphones'] } };
 let guideHTML = '';
-// pos: 'tr'(右上) / 'br'(右下) / 'in-arena'(戦闘エリアの左下)。tut: 光らせる対象（CSS の body[data-tut~=...]）
-function guide(title, html, { pos = 'in-arena', tut = '', closable = false } = {}) {
+// pos: 'battle'(戦闘エリアの上) / 'map'(マップの上) / 'br'(右下に浮かせる)。tut: 光らせる対象（CSS の body[data-tut~=...]）
+function guide(title, html, { pos = 'battle', tut = '', closable = false } = {}) {
   const g = $('#guide');
-  (pos === 'in-arena' ? $('#arena') : document.body).appendChild(g);
-  g.className = 'guide ' + pos;
+  // 戦闘・マップでは、画面に重ならないよう プレイ画面の上に専用の段を作って表示する
+  if (pos === 'battle') $('#screen-battle').insertBefore(g, $('#arena'));
+  else if (pos === 'map') $('#screen-map').insertBefore(g, $('#mapArea'));
+  else document.body.appendChild(g);
+  g.className = 'guide ' + (pos === 'br' ? 'br' : 'dock');
   if (!$('#guideAv').innerHTML) $('#guideAv').innerHTML = A.avatar(NAVI);
   $('#guideClose').hidden = !closable;
   document.body.dataset.tut = tut;
@@ -22,6 +25,7 @@ function guide(title, html, { pos = 'in-arena', tut = '', closable = false } = {
     $('#guideText').innerHTML = html;
     bump(g, 'pop');
   }
+  if (pos === 'battle' && B && !B.ended) requestAnimationFrame(measure);
 }
 function hideGuide() {
   const g = $('#guide');
@@ -57,7 +61,7 @@ function mapGuide() {
     ['NEXT ▶ 卒業テスト', `最後は <b>卒業テスト</b>！ ここまで覚えたことを 全部使おう。<br>${cmd} で進もう。`],
   ];
   const [title, text] = steps[Math.min(c, steps.length - 1)];
-  guide(title, text + '<br><small class="dim">打ちまちがえたら Backspace で やり直せるよ。</small>', { pos: 'tr', tut: 'map' });
+  guide(title, text + '<br><small class="dim">打ちまちがえたら Backspace で やり直せるよ。</small>', { pos: 'map', tut: 'map' });
 }
 function battleGuide() {
   const t = B.tut;
